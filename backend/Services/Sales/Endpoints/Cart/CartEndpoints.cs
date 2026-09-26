@@ -34,5 +34,6 @@ internal static class CartEndpoints
         CartItemAddEndpoint.MapCartItemAddEndpoint(group);
         CartItemChangeEndpoints.MapCartItemChangeEndpoints(group);
         CartOptionsEndpoints.MapCartOptionsEndpoints(group);
+        CartBundleEndpoints.MapCartBundleEndpoints(group);
     }
 }

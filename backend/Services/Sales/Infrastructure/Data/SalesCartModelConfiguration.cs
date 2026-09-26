@@ -40,6 +40,8 @@ internal static class SalesCartModelConfiguration
                 item.Property(i => i.VariantSku).HasColumnName("VariantSku");
                 item.Property(i => i.IsGift).HasColumnName("IsGift").HasDefaultValue(false);
                 item.Property(i => i.AppliedPromotionCode).HasColumnName("AppliedPromotionCode").HasMaxLength(50);
+                // Combo: dòng thuộc nhóm combo (null = dòng lẻ).
+                item.Property(i => i.BundleName).HasMaxLength(200);
                 item.ToTable(t =>
                 {
                     t.HasCheckConstraint("CK_CartItem_Price_NonNegative", "\"Price\" >= 0");

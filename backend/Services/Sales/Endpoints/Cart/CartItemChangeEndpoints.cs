@@ -44,7 +44,8 @@ internal static class CartItemChangeEndpoints
             if (cart == null)
                 return Results.NotFound(new { Error = "Cart not found" });
 
-            var existingItem = cart.Items.FirstOrDefault(i => i.ProductId == productId);
+            var existingItem = cart.Items.FirstOrDefault(i => i.ProductId == productId && i.BundleId == null)
+                ?? cart.Items.FirstOrDefault(i => i.ProductId == productId);
             if (existingItem == null)
                 return Results.NotFound(new { Error = "Item not found in cart" });
 
@@ -103,7 +104,8 @@ internal static class CartItemChangeEndpoints
             // Giỏ hàng không giữ chỗ gì nữa, nên "nhả" ở đây chỉ có thể nhả NHẦM phần giữ chỗ
             // của phiên checkout người khác (đo được: ReservedQuantity 4 → 0 trong khi hai
             // StockReservations 'CheckoutSession' vẫn Active).
-            cart.RemoveItem(productId);
+            // Combo: xoá dòng lẻ trước; sản phẩm chỉ nằm trong combo thì combo vỡ, món còn lại về giá lẻ.
+            cart.RemoveStandaloneOrBundledItem(productId);
             await db.SaveChangesAsync();
 
             return Results.Ok(new { Message = "Item removed from cart" });

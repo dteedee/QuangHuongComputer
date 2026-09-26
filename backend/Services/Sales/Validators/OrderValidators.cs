@@ -23,8 +23,17 @@ public class GuestCheckoutDtoValidator : AbstractValidator<GuestCheckoutDto>
         RuleFor(x => x.ShippingAddress)
             .NotEmpty().WithMessage(VietnameseValidationMessages.RequiredField("Địa chỉ giao hàng"));
 
+        // Giỏ chỉ có combo (Items rỗng, Bundles có) vẫn hợp lệ.
         RuleFor(x => x.Items)
-            .NotEmpty().WithMessage(VietnameseValidationMessages.CollectionEmpty("Giỏ hàng"));
+            .NotEmpty().WithMessage(VietnameseValidationMessages.CollectionEmpty("Giỏ hàng"))
+            .When(x => x.Bundles == null || x.Bundles.Count == 0);
+
+        RuleForEach(x => x.Bundles).ChildRules(b =>
+        {
+            b.RuleFor(i => i.BundleId).NotEmpty().WithMessage(VietnameseValidationMessages.RequiredField("Combo"));
+            b.RuleFor(i => i.Quantity).InclusiveBetween(1, 10)
+                .WithMessage(VietnameseValidationMessages.NumberOutOfRange("Số bộ combo", 1, 10));
+        });
 
         RuleForEach(x => x.Items).ChildRules(item =>
         {

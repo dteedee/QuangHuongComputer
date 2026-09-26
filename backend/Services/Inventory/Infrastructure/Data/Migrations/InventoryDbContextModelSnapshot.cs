@@ -1566,6 +1566,12 @@ namespace Inventory.Infrastructure.Data.Migrations
                     b.Property<string>("ApprovedBy")
                         .HasColumnType("text");
 
+                    b.Property<DateTime?>("CancelledAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("CancelledBy")
+                        .HasColumnType("text");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp without time zone");
 
@@ -1583,6 +1589,10 @@ namespace Inventory.Infrastructure.Data.Migrations
 
                     b.Property<DateTime?>("ReceivedAt")
                         .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("ReceiveNote")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
 
                     b.Property<string>("ReceivedBy")
                         .HasColumnType("text");
@@ -1614,6 +1624,12 @@ namespace Inventory.Infrastructure.Data.Migrations
 
                     b.Property<string>("UpdatedBy")
                         .HasColumnType("text");
+
+                    b.Property<uint>("xmin")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
 
                     b.HasKey("Id");
 
@@ -1658,6 +1674,15 @@ namespace Inventory.Infrastructure.Data.Migrations
 
                     b.Property<int>("Quantity")
                         .HasColumnType("integer");
+
+                    b.Property<int?>("ReceivedQuantity")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("SerialNumbers")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("jsonb")
+                        .HasDefaultValueSql("'[]'::jsonb");
 
                     b.Property<Guid>("StockTransferId")
                         .HasColumnType("uuid");

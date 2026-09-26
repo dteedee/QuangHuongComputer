@@ -463,6 +463,10 @@ namespace Catalog.Infrastructure.Data.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<decimal?>("DiscountPercent")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("numeric(5,2)");
+
                     b.Property<string>("ImageUrl")
                         .HasColumnType("text");
 
@@ -504,6 +508,8 @@ namespace Catalog.Infrastructure.Data.Migrations
 
                     b.ToTable("ProductBundles", "public", t =>
                         {
+                            t.HasCheckConstraint("CK_ProductBundles_DiscountPercent_Range", "\"DiscountPercent\" IS NULL OR (\"DiscountPercent\" > 0 AND \"DiscountPercent\" < 100)");
+
                             t.HasCheckConstraint("CK_ProductBundles_OriginalPrice_NonNegative", "\"OriginalPrice\" >= 0");
 
                             t.HasCheckConstraint("CK_ProductBundles_TotalPrice_NonNegative", "\"TotalPrice\" >= 0");
@@ -812,6 +818,10 @@ namespace Catalog.Infrastructure.Data.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("Cons")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp without time zone");
 
@@ -840,8 +850,22 @@ namespace Catalog.Infrastructure.Data.Migrations
                     b.Property<Guid>("ProductId")
                         .HasColumnType("uuid");
 
+                    b.Property<string>("Pros")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
                     b.Property<int>("Rating")
                         .HasColumnType("integer");
+
+                    b.Property<DateTime?>("RepliedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("RepliedBy")
+                        .HasMaxLength(450)
+                        .HasColumnType("character varying(450)");
+
+                    b.Property<string>("ReplyText")
+                        .HasColumnType("text");
 
                     b.Property<string>("Title")
                         .HasMaxLength(200)
@@ -1126,10 +1150,25 @@ namespace Catalog.Infrastructure.Data.Migrations
                     b.Property<bool>("IsCompatible")
                         .HasColumnType("boolean");
 
+                    b.Property<bool>("IsFeatured")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
+                    b.Property<bool>("IsPublic")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(150)
                         .HasColumnType("character varying(150)");
+
+                    b.Property<int>("SortOrder")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0);
 
                     b.Property<decimal>("TotalPrice")
                         .HasPrecision(18, 2)
@@ -1144,6 +1183,10 @@ namespace Catalog.Infrastructure.Data.Migrations
                     b.Property<string>("UpdatedBy")
                         .HasColumnType("text");
 
+                    b.Property<string>("UseCaseTag")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("BuildCode")
@@ -1152,6 +1195,9 @@ namespace Catalog.Infrastructure.Data.Migrations
 
                     b.HasIndex("CustomerId")
                         .HasDatabaseName("ix_saved_pc_builds_customer_id");
+
+                    b.HasIndex("IsPublic", "SortOrder")
+                        .HasDatabaseName("ix_saved_pc_builds_public_sort");
 
                     b.ToTable("SavedPcBuilds", "public");
                 });

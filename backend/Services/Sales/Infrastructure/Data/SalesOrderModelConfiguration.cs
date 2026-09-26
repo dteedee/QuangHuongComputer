@@ -124,6 +124,8 @@ internal static class SalesOrderModelConfiguration
             item.Property(i => i.LineDiscount).HasPrecision(18, 2).HasDefaultValue(0m);
             // D07 — đơn vị tính in trên hoá đơn điện tử.
             item.Property(i => i.UnitName).HasMaxLength(50);
+            // Combo đã áp giá combo lúc chốt đơn (snapshot).
+            item.Property(i => i.BundleName).HasMaxLength(200);
 
             item.HasIndex(i => i.ProductId).HasDatabaseName("ix_order_item_product_id");
             item.ToTable(t =>

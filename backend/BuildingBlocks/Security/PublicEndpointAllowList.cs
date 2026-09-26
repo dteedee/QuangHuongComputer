@@ -45,6 +45,8 @@ public static class PublicEndpointAllowList
 
         // --- Storefront: chỉ ĐỌC, và chỉ nhánh không chứa 'admin' ---
         new PublicEndpointRule("/api/catalog/**", Get, "Danh mục sản phẩm là mặt tiền cửa hàng; chỉ GET."),
+        // Đã có /api/catalog/** phủ; ghi riêng vì đây là mục DUY NHẤT dưới catalog đọc dữ liệu Sales.
+        new PublicEndpointRule("/api/catalog/products/{productId}/bought-together", Get, "Gợi ý 'Thường được mua cùng' trên trang sản phẩm/giỏ: chỉ sản phẩm đã đăng web + SỐ ĐƠN tổng hợp (ICoPurchaseQuery), không mã đơn, không khách; cache 3 giờ (CatalogBoughtTogetherEndpoints.cs:27-44)."),
         new PublicEndpointRule("/api/content/**", Get, "Trang tĩnh, bài viết, banner hiển thị cho khách; chỉ GET."),
         new PublicEndpointRule("/api/promotions", Get, "Danh sách khuyến mãi đang chạy hiển thị trên storefront."),
         new PublicEndpointRule("/api/promotions/{code}", Get, "Xem một khuyến mãi ĐANG CHẠY (Promotion.RunningPredicate); nháp/tạm dừng -> 404, nhân viên dùng /admin/{id}."),

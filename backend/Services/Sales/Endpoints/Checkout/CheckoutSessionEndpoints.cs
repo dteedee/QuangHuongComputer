@@ -58,7 +58,7 @@ internal static class CheckoutSessionEndpoints
         var outcome = await reservations.ReserveAsync(
             session.Id.ToString(),
             InventoryReservationService.CheckoutSessionReference,
-            lines.Select(i => new ReservationLine(i.ProductId, i.VariantId, i.Quantity, i.ProductName)).ToList(),
+            ReservationLines.FromCart(lines),
             expirationHours: 1,
             ct);
 

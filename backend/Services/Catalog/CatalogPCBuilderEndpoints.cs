@@ -28,5 +28,6 @@ public static class CatalogPCBuilderEndpoints
         group.MapPcBuilderCandidates();
         group.MapPcBuilderCheck();
         group.MapPcBuilderBuilds();
+        group.MapPcBuilderGallery();
     }
 }

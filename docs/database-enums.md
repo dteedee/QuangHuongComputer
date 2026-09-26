@@ -179,7 +179,7 @@
 | `ReturnType` | 1 = Refund, 2 = Exchange, 3 = Replace |
 | `RfqStatus` | 0 = Draft, 1 = Sent, 2 = ClosedForBidding, 3 = Awarded, 4 = Cancelled |
 | `RmaStatus` | 1 = Draft, 2 = Sent, 3 = Received, 4 = Closed |
-| `SerialStatus` | 0 = InStock, 1 = Reserved, 2 = Sold, 3 = Returned, 4 = Defective, 5 = InRepair, 6 = Scrapped |
+| `SerialStatus` | 0 = InStock, 1 = Reserved, 2 = Sold, 3 = Returned, 4 = Defective, 5 = InRepair, 6 = Scrapped, 7 = InTransit |
 | `ShiftStatus` | 0 = Open, 1 = Closed |
 | `ShiftTransactionSource` | 0 = Manual, 1 = PosSale, 2 = PosRefund, 3 = Deposit, 4 = CashDrop, 5 = ExpensePayout |
 | `SpecDataType` | 1 = Text, 2 = Number, 3 = Boolean, 4 = Enum |

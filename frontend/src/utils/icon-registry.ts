@@ -16,7 +16,7 @@ import {
     Key, Shield, UserCog, UsersRound,
     Percent, DollarSign, Banknote, Coins,
     PieChart, LineChart, BarChart,
-    Package2, PackageCheck, PackageX, PackageOpen, Boxes,
+    Package2, PackageCheck, PackageX, PackageOpen, Boxes, ArrowRightLeft,
     type LucideIcon,
 } from 'lucide-react';
 
@@ -38,6 +38,7 @@ const iconMap: Record<string, LucideIcon> = {
     PackageOpen,
     Boxes,
     Box,
+    ArrowRightLeft,
     Archive,
     // Commerce
     Receipt,

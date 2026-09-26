@@ -9,6 +9,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Sales.Application.Inventory;
 using Sales.Application.Pricing;
+using Sales.Application.Pricing.Bundles;
 using Sales.Domain;
 using Sales.Infrastructure;
 using System.Text.Json;
@@ -37,6 +38,7 @@ public class CheckoutOrchestrator
     private readonly CatalogDbContext _catalogDb;
     private readonly ContentDbContext _contentDb;
     private readonly IPricingEngine _pricingEngine;
+    private readonly BundleCartPricingService _bundlePricing;
     private readonly LineVatProfileResolver _vatResolver;
     private readonly InventoryReservationService _reservations;
     private readonly IOrderPriceSource _priceSource;
@@ -52,6 +54,7 @@ public class CheckoutOrchestrator
         CatalogDbContext catalogDb,
         ContentDbContext contentDb,
         IPricingEngine pricingEngine,
+        BundleCartPricingService bundlePricing,
         LineVatProfileResolver vatResolver,
         InventoryReservationService reservations,
         IOrderPriceSource priceSource,
@@ -66,6 +69,7 @@ public class CheckoutOrchestrator
         _catalogDb = catalogDb;
         _contentDb = contentDb;
         _pricingEngine = pricingEngine;
+        _bundlePricing = bundlePricing;
         _vatResolver = vatResolver;
         _reservations = reservations;
         _priceSource = priceSource;
@@ -150,14 +154,14 @@ public class CheckoutOrchestrator
             session.Session != null
                 ? InventoryReservationService.CheckoutSessionReference
                 : InventoryReservationService.OrderReference,
-            payable.Select(i => new ReservationLine(i.ProductId, i.VariantId, i.Quantity, i.ProductName)).ToList(),
+            ReservationLines.FromCart(payable),
             expirationHours: 1,
             ct);
         if (!reserve.Success) return CheckoutResult.Failure(reserve.ErrorMessage!);
 
         // 3. KHUYẾN MÃI + COUPON — tính lại từ đầu tại thời điểm chốt đơn.
         var pricing = await CheckoutPricingStep.ApplyAsync(
-            _pricingEngine, _contentDb, cart, req, ct);
+            _pricingEngine, _contentDb, _bundlePricing, cart, req, ct);
         if (pricing.Error != null) return CheckoutResult.Failure(pricing.Error);
 
         // 3b. PHÍ SHIP — trên kênh khách, SERVER quyết định (W0-4 `ShippingFeePolicy` là nguồn duy nhất).
@@ -169,7 +173,7 @@ public class CheckoutOrchestrator
         // W0-4 đã bịt ("khách tự set phí ship") mở lại. POS/Báo giá vẫn giữ phí do nhân viên nhập.
         if (req.Channel is CheckoutChannel.Web or CheckoutChannel.Guest)
         {
-            var netSubtotal = payable.Sum(i => i.Subtotal) - pricing.OrderDiscount;
+            var netSubtotal = payable.Sum(i => i.Subtotal) - pricing.BundleDiscount - pricing.OrderDiscount;
             req = req with
             {
                 Shipping = req.Shipping with

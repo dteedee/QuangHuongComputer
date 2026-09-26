@@ -105,7 +105,23 @@ public record UpdateBrandDto(
     int? DisplayOrder = null,
     string? Slug = null);
 
-public record CreateProductReviewDto(int Rating, string Comment, string? Title = null, string? ImageUrls = null, string? VideoUrl = null);
+/// <summary>
+/// Tạo đánh giá. <c>Photos</c> chỉ nhận ảnh vừa tải qua <c>POST /reviews/photos</c> (tối đa 5,
+/// URL phải thuộc kho media của cửa hàng — <see cref="Catalog.Domain.ReviewPhotoPolicy"/>).
+/// </summary>
+public record CreateProductReviewDto(
+    int Rating,
+    string Comment,
+    string? Title = null,
+    List<ReviewPhotoDto>? Photos = null,
+    string? VideoUrl = null,
+    string? Pros = null,
+    string? Cons = null);
+
+public record ReviewPhotoDto(string Url, string ThumbnailUrl);
+
+/// <summary>POST/PUT /reviews/admin/{id}/reply.</summary>
+public record ReviewReplyDto(string Text);
 
 // ---------------------------------------------------------------- response mappers
 

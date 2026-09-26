@@ -1,253 +1,63 @@
-using BuildingBlocks.Security;
+using Catalog.Application.Bundles;
+using Catalog.Infrastructure;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
-using Catalog.Infrastructure;
-using Catalog.Domain;
 
 namespace Catalog;
 
+/// <summary>
+/// Combo sản phẩm — mặt CÔNG KHAI (chỉ GET, nằm trong allow-list <c>/api/catalog/**</c> GET).
+/// Chỉ trả combo đang bật + trong khung hiệu lực + mọi món đã đăng web; giá combo và tiền tiết
+/// kiệm tính lại từ giá hiện hành. Mặt quản trị: <see cref="CatalogBundleAdminEndpoints"/>.
+/// Giá có thẩm quyền lúc chốt đơn vẫn do Sales tính lại (<c>BundleCartPricer</c>).
+/// </summary>
 public static class CatalogBundleEndpoints
 {
     public static void MapCatalogBundleEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/catalog/bundles");
 
-        group.MapGet("/", async (CatalogDbContext db) =>
+        group.MapGet("/", async (CatalogDbContext db, CancellationToken ct) =>
         {
-            var now = DateTime.UtcNow;
-            var bundles = await db.ProductBundles
-                .Include(b => b.Items)
-                .AsNoTracking()
-                .Where(b => b.ValidFrom == null || b.ValidFrom <= now)
-                .Where(b => b.ValidTo == null || b.ValidTo >= now)
+            var bundles = await db.ProductBundles.Include(b => b.Items).AsNoTracking()
+                .WhereLive(DateTime.UtcNow)
                 .OrderByDescending(b => b.CreatedAt)
-                .ToListAsync();
-
-            var productIds = bundles.SelectMany(b => b.Items.Select(i => i.ProductId)).Distinct().ToList();
-            var products = await db.Products
-                .AsNoTracking()
-                .Where(p => productIds.Contains(p.Id))
-                .ToDictionaryAsync(p => p.Id);
-
-            var result = bundles.Select(b => new
-            {
-                b.Id,
-                b.Name,
-                b.Description,
-                b.TotalPrice,
-                b.OriginalPrice,
-                b.ImageUrl,
-                b.ValidFrom,
-                b.ValidTo,
-                Items = b.Items.Select(i => new
-                {
-                    i.Id,
-                    i.ProductId,
-                    i.IsMainItem,
-                    i.Quantity,
-                    i.OriginalUnitPrice,
-                    i.DiscountPercentage,
-                    i.DiscountedUnitPrice,
-                    ProductName = products.ContainsKey(i.ProductId) ? products[i.ProductId].Name : "Unknown",
-                    ProductImage = products.ContainsKey(i.ProductId) ? products[i.ProductId].ImageUrl : null,
-                    ProductSku = products.ContainsKey(i.ProductId) ? products[i.ProductId].Sku : null
-                })
-            });
-
-            return Results.Ok(result);
+                .ToListAsync(ct);
+            return Results.Ok(await PublicViewsAsync(db, bundles, ct));
         });
 
-        group.MapGet("/{id:guid}", async (Guid id, CatalogDbContext db) =>
+        group.MapGet("/{id:guid}", async (Guid id, CatalogDbContext db, CancellationToken ct) =>
         {
-            var b = await db.ProductBundles
-                .Include(x => x.Items)
-                .AsNoTracking()
-                .FirstOrDefaultAsync(x => x.Id == id);
-
-            if (b == null) return Results.NotFound();
-
-            var productIds = b.Items.Select(i => i.ProductId).Distinct().ToList();
-            var products = await db.Products
-                .AsNoTracking()
-                .Where(p => productIds.Contains(p.Id))
-                .ToDictionaryAsync(p => p.Id);
-
-            var result = new
-            {
-                b.Id,
-                b.Name,
-                b.Description,
-                b.TotalPrice,
-                b.OriginalPrice,
-                b.ImageUrl,
-                b.ValidFrom,
-                b.ValidTo,
-                Items = b.Items.Select(i => new
-                {
-                    i.Id,
-                    i.ProductId,
-                    i.IsMainItem,
-                    i.Quantity,
-                    i.OriginalUnitPrice,
-                    i.DiscountPercentage,
-                    i.DiscountedUnitPrice,
-                    ProductName = products.ContainsKey(i.ProductId) ? products[i.ProductId].Name : "Unknown",
-                    ProductImage = products.ContainsKey(i.ProductId) ? products[i.ProductId].ImageUrl : null,
-                    ProductSku = products.ContainsKey(i.ProductId) ? products[i.ProductId].Sku : null
-                })
-            };
-
-            return Results.Ok(result);
-        });
-
-        group.MapGet("/product/{productId:guid}", async (Guid productId, CatalogDbContext db) =>
-        {
-            var now = DateTime.UtcNow;
-
-            // Find all active bundles that contain this product
-            var bundleIds = await db.ProductBundleItems
-                .Where(i => i.ProductId == productId)
-                .Select(i => i.BundleId)
-                .Distinct()
-                .ToListAsync();
-
-            if (!bundleIds.Any()) return Results.Ok(new List<object>());
-
-            var bundles = await db.ProductBundles
-                .Include(b => b.Items)
-                .AsNoTracking()
-                .Where(b => bundleIds.Contains(b.Id))
-                .Where(b => b.ValidFrom == null || b.ValidFrom <= now)
-                .Where(b => b.ValidTo == null || b.ValidTo >= now)
-                .ToListAsync();
-
-            var allProductIds = bundles.SelectMany(b => b.Items.Select(i => i.ProductId)).Distinct().ToList();
-            var products = await db.Products
-                .AsNoTracking()
-                .Where(p => allProductIds.Contains(p.Id))
-                .ToDictionaryAsync(p => p.Id);
-
-            var result = bundles.Select(b => new
-            {
-                b.Id,
-                b.Name,
-                b.Description,
-                b.TotalPrice,
-                b.OriginalPrice,
-                b.ImageUrl,
-                b.ValidFrom,
-                b.ValidTo,
-                Items = b.Items.Select(i => new
-                {
-                    i.Id,
-                    i.ProductId,
-                    i.IsMainItem,
-                    i.Quantity,
-                    i.OriginalUnitPrice,
-                    i.DiscountPercentage,
-                    i.DiscountedUnitPrice,
-                    ProductName = products.ContainsKey(i.ProductId) ? products[i.ProductId].Name : "Unknown",
-                    ProductImage = products.ContainsKey(i.ProductId) ? products[i.ProductId].ImageUrl : null,
-                    ProductSku = products.ContainsKey(i.ProductId) ? products[i.ProductId].Sku : null
-                })
-            });
-
-            return Results.Ok(result);
-        });
-
-        // Admin Endpoints
-        group.MapPost("/", async (CreateBundleRequest request, CatalogDbContext db) =>
-        {
-            var productIds = request.Items.Select(i => i.ProductId).Distinct().ToList();
-            var products = await db.Products
-                .Where(p => productIds.Contains(p.Id))
-                .ToDictionaryAsync(p => p.Id);
-
-            var bundle = new ProductBundle(
-                request.Name,
-                request.Description ?? "",
-                request.TotalPrice,
-                request.OriginalPrice,
-                request.ImageUrl,
-                request.ValidFrom,
-                request.ValidTo
-            );
-
-            foreach (var item in request.Items)
-            {
-                if (products.TryGetValue(item.ProductId, out var product))
-                {
-                    bundle.AddItem(item.ProductId, item.IsMainItem, item.Quantity, product.Price, item.DiscountPercentage);
-                }
-            }
-
-            db.ProductBundles.Add(bundle);
-            await db.SaveChangesAsync();
-
-            return Results.Created($"/api/catalog/bundles/{bundle.Id}", bundle.Id);
-        }).RequireAuthorization(Permissions.Catalog.Create);
-
-        group.MapPut("/{id:guid}", async (Guid id, CreateBundleRequest request, CatalogDbContext db) =>
-        {
-            var bundle = await db.ProductBundles
-                .Include(b => b.Items)
-                .FirstOrDefaultAsync(b => b.Id == id);
+            var bundle = await db.ProductBundles.Include(b => b.Items).AsNoTracking()
+                .WhereLive(DateTime.UtcNow)
+                .FirstOrDefaultAsync(b => b.Id == id, ct);
             if (bundle == null) return Results.NotFound();
 
-            var productIds = request.Items.Select(i => i.ProductId).Distinct().ToList();
-            var products = await db.Products
-                .Where(p => productIds.Contains(p.Id))
-                .ToDictionaryAsync(p => p.Id);
+            var views = await PublicViewsAsync(db, new[] { bundle }, ct);
+            return views.Count == 0 ? Results.NotFound() : Results.Ok(views[0]);
+        });
 
-            bundle.UpdateDetails(
-                request.Name,
-                request.Description ?? "",
-                request.TotalPrice,
-                request.OriginalPrice,
-                request.ImageUrl,
-                request.ValidFrom,
-                request.ValidTo
-            );
-
-            bundle.ClearItems();
-            foreach (var item in request.Items)
-            {
-                if (products.TryGetValue(item.ProductId, out var product))
-                {
-                    bundle.AddItem(item.ProductId, item.IsMainItem, item.Quantity, product.Price, item.DiscountPercentage);
-                }
-            }
-
-            await db.SaveChangesAsync();
-            return Results.Ok(new { bundle.Id });
-        }).RequireAuthorization(Permissions.Catalog.Edit);
-
-        group.MapDelete("/{id:guid}", async (Guid id, CatalogDbContext db) =>
+        // "Combo tiết kiệm" trên trang sản phẩm: mọi combo đang bán có chứa sản phẩm này.
+        group.MapGet("/product/{productId:guid}", async (Guid productId, CatalogDbContext db, CancellationToken ct) =>
         {
-            var bundle = await db.ProductBundles.FindAsync(id);
-            if (bundle == null) return Results.NotFound();
+            var bundles = await db.ProductBundles.Include(b => b.Items).AsNoTracking()
+                .WhereLive(DateTime.UtcNow)
+                .Where(b => b.Items.Any(i => i.ProductId == productId))
+                .OrderByDescending(b => b.CreatedAt)
+                .ToListAsync(ct);
+            return Results.Ok(await PublicViewsAsync(db, bundles, ct));
+        });
 
-            db.ProductBundles.Remove(bundle);
-            await db.SaveChangesAsync();
-            return Results.NoContent();
-        }).RequireAuthorization(Permissions.Catalog.Delete);
+        group.MapCatalogBundleAdminEndpoints();
+    }
+
+    /// <summary>Khách không bao giờ thấy combo có món đã gỡ khỏi web hoặc không còn rẻ hơn giá lẻ.</summary>
+    private static async Task<IReadOnlyList<BundleView>> PublicViewsAsync(
+        CatalogDbContext db, IReadOnlyList<Domain.ProductBundle> bundles, CancellationToken ct)
+    {
+        var views = await BundleViewBuilder.BuildAsync(db, bundles, ct);
+        return views.Where(v => v.Items.Count > 0 && v.Items.All(i => i.IsPublished) && v.Savings > 0m).ToList();
     }
 }
-
-public record CreateBundleRequest(
-    string Name,
-    string? Description,
-    decimal TotalPrice,
-    decimal OriginalPrice,
-    string? ImageUrl,
-    DateTime? ValidFrom,
-    DateTime? ValidTo,
-    List<CreateBundleItemRequest> Items);
-
-public record CreateBundleItemRequest(
-    Guid ProductId,
-    bool IsMainItem,
-    int Quantity,
-    decimal DiscountPercentage);

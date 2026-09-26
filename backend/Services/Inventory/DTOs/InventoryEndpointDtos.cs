@@ -68,7 +68,18 @@ public record CreateTransferDto(
     string? RequestedBy,
     string? Notes);
 
-public record TransferItemDto(Guid InventoryItemId, int Quantity, string? ProductName, string? ProductSku);
+/// <param name="ProductName">Bỏ qua — tên/SKU chụp từ Catalog phía server, không tin client.</param>
+/// <param name="SerialNumbers">Bắt buộc cho hàng theo dõi serial: đúng <paramref name="Quantity"/> serial đang InStock ở kho xuất.</param>
+public record TransferItemDto(
+    Guid InventoryItemId, int Quantity, string? ProductName, string? ProductSku,
+    List<string>? SerialNumbers = null);
+
+/// <summary>Nhận hàng chuyển kho. Không gửi body (hoặc <c>Lines</c> rỗng) = nhận đủ mọi dòng.</summary>
+public record ReceiveTransferDto(List<ReceiveTransferLineDto>? Lines, string? Note);
+
+/// <param name="ItemId">Id dòng phiếu (<c>StockTransferItem.Id</c>).</param>
+/// <param name="ReceivedSerials">Hàng serial: những máy thực sự nhận được (tập con của máy đã xuất).</param>
+public record ReceiveTransferLineDto(Guid ItemId, int ReceivedQuantity, List<string>? ReceivedSerials);
 
 // --- Serial ---
 

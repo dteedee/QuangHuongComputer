@@ -304,6 +304,11 @@ public class CatalogDbContext : DbContext
             entity.Property(pr => pr.Comment).IsRequired().HasColumnType("text");
             entity.Property(pr => pr.Title).HasMaxLength(200);
             entity.Property(pr => pr.ImageUrls).HasColumnType("jsonb");
+            // W2: ưu/nhược điểm + "Phản hồi từ Quang Hưởng".
+            entity.Property(pr => pr.Pros).HasMaxLength(ProductReview.MaxProsConsLength);
+            entity.Property(pr => pr.Cons).HasMaxLength(ProductReview.MaxProsConsLength);
+            entity.Property(pr => pr.ReplyText).HasColumnType("text");
+            entity.Property(pr => pr.RepliedBy).HasMaxLength(450);
             
             entity.HasOne<Product>()
                 .WithMany()
@@ -403,6 +408,14 @@ public class CatalogDbContext : DbContext
 
             entity.HasIndex(pc => pc.CustomerId)
                 .HasDatabaseName("ix_saved_pc_builds_customer_id");
+
+            // W2: "Cấu hình mẫu" /cau-hinh-mau — cờ chỉ nhân viên đặt được.
+            entity.Property(pc => pc.IsFeatured).HasDefaultValue(false);
+            entity.Property(pc => pc.IsPublic).HasDefaultValue(false);
+            entity.Property(pc => pc.UseCaseTag).HasMaxLength(30);
+            entity.Property(pc => pc.SortOrder).HasDefaultValue(0);
+            entity.HasIndex(pc => new { pc.IsPublic, pc.SortOrder })
+                .HasDatabaseName("ix_saved_pc_builds_public_sort");
         });
 
         // SavedPcBuildItem configurations
@@ -441,6 +454,8 @@ public class CatalogDbContext : DbContext
             entity.Property(pb => pb.Description).HasColumnType("text");
             entity.Property(pb => pb.TotalPrice).HasPrecision(18, 2);
             entity.Property(pb => pb.OriginalPrice).HasPrecision(18, 2);
+            // Chế độ giá % (null = giá cố định TotalPrice) — W2 combo.
+            entity.Property(pb => pb.DiscountPercent).HasPrecision(5, 2);
             
             entity.HasIndex(pb => pb.ValidFrom)
                 .HasDatabaseName("ix_product_bundles_valid_from");
@@ -452,6 +467,9 @@ public class CatalogDbContext : DbContext
             {
                 t.HasCheckConstraint("CK_ProductBundles_TotalPrice_NonNegative", "\"TotalPrice\" >= 0");
                 t.HasCheckConstraint("CK_ProductBundles_OriginalPrice_NonNegative", "\"OriginalPrice\" >= 0");
+                t.HasCheckConstraint(
+                    "CK_ProductBundles_DiscountPercent_Range",
+                    "\"DiscountPercent\" IS NULL OR (\"DiscountPercent\" > 0 AND \"DiscountPercent\" < 100)");
             });
         });
 

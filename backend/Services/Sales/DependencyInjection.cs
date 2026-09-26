@@ -40,6 +40,8 @@ public static class DependencyInjection
         services.AddScoped<CheckoutOrchestrator>();
         services.AddScoped<InventoryReservationService>();
         services.AddScoped<LineVatProfileResolver>();
+        // Combo: giá combo cho giỏ + chốt đơn, một nguồn duy nhất.
+        services.AddScoped<Sales.Application.Pricing.Bundles.BundleCartPricingService>();
 
         // Nguồn giá mặc định: giá niêm yết trong Catalog. W2-19 đăng ký thêm nguồn giá báo giá.
         services.AddScoped<IOrderPriceSource, CatalogOrderPriceSource>();
@@ -65,6 +67,11 @@ public static class DependencyInjection
         // không bao giờ tự cấp huy hiệu (fail-closed).
         services.AddScoped<BuildingBlocks.Contracts.IPurchaseVerificationQuery,
                            Sales.Application.Orders.PurchaseVerificationQuery>();
+
+        // Catalog hỏi "sản phẩm này thường được mua cùng gì" (khối gợi ý trên trang sản phẩm)
+        // qua contract ở BuildingBlocks — chỉ số đếm tổng hợp, không dữ liệu đơn/khách.
+        services.AddScoped<BuildingBlocks.Contracts.ICoPurchaseQuery,
+                           Sales.Application.Orders.CoPurchaseQuery>();
 
         return services;
     }

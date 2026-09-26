@@ -30,7 +30,9 @@ import SEO from '../components/SEO';
 import { notify } from '../components/ui';
 import { RecentlyViewedProducts } from '../components/RecentlyViewedProducts';
 import RecommendationCarousel from '../components/recommendation-carousel';
+import ProductBoughtTogetherBlock from '../components/product-detail/product-bought-together-block';
 import { WriteReviewModal } from '../components/reviews';
+import { ProductComboSavingsBlock } from '../components/product-detail/product-combo-savings-block';
 import {
     ProductDetailAddedToCartToast,
     ProductDetailBreadcrumb,
@@ -336,6 +338,8 @@ export default function ProductDetailPage() {
                     </div>
                 </div>
 
+                <ProductComboSavingsBlock productId={product.id} />
+
                 <ProductDetailTabs
                     product={product as Product}
                     activeTab={activeTab}
@@ -358,6 +362,9 @@ export default function ProductDetailPage() {
                     onWriteReview={handleWriteReview}
                     onMarkHelpful={handleMarkHelpful}
                 />
+
+                {/* Bundle add-to-cart cannot choose a variant, so only variant-free products get it. */}
+                {variants.length === 0 && <ProductBoughtTogetherBlock productId={product.id} />}
 
                 <RecommendationCarousel productId={product.id} title="Sản phẩm gợi ý cho bạn" />
 
