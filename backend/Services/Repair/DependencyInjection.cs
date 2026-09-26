@@ -36,6 +36,10 @@ public static class DependencyInjection
         services.AddScoped<IRepairStockService, RepairStockService>();
         services.AddScoped<Application.Quotes.RepairVatRateProvider>();
 
+        // Hoa hồng kỹ thuật (HR) đọc phiếu sửa đã thu tiền qua contract, không tham chiếu Repair.
+        services.AddScoped<BuildingBlocks.Contracts.IRepairCommissionSourceQuery,
+            Application.Commission.RepairCommissionSourceQuery>();
+
         return services;
     }
 }

@@ -13,7 +13,7 @@ export function ComparisonBar() {
   if (items.length === 0) return null;
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-40 transition-transform duration-300">
+    <div className="fixed bottom-mobile-nav left-0 right-0 z-40 transition-transform duration-300">
       {/* Toggle button */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}

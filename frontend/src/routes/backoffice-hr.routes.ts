@@ -22,6 +22,7 @@ const PayrollDetailPage = lazy(() => import('../pages/backoffice/hr/payroll-deta
 const SalaryStructurePage = lazy(() => import('../pages/backoffice/hr/salary-structure-page'));
 const PitFinalizationPage = lazy(() => import('../pages/backoffice/hr/pit-finalization-page'));
 const StatutoryParametersPage = lazy(() => import('../pages/backoffice/hr/statutory-parameters-page'));
+const CommissionsPage = lazy(() => import('../pages/backoffice/hr/commissions-page'));
 
 export const backofficeHrRoutes: RouteDef[] = [
   { path: 'hr', element: HRPortal, layout: 'backoffice', group: 'finance_hr', icon: 'Briefcase', title: 'Nhân sự', description: 'Quản lý nhân sự', permission: PERMISSIONS.HR_VIEW_EMPLOYEES, name: 'hr' },
@@ -41,6 +42,9 @@ export const backofficeHrRoutes: RouteDef[] = [
   // contract, not a guess. PIT finalization (tax filing, most sensitive) keeps the narrow old gate.
   { path: 'hr/payroll-runs', element: PayrollRunPage, layout: 'backoffice', group: 'finance_hr', icon: 'Wallet', title: 'Chạy lương', description: 'Kỳ lương & bảng lương', permission: PERMISSIONS.HR_MANAGE_PAYROLL, name: 'hrPayrollRuns' },
   { path: 'hr/payroll/:payrollId', element: PayrollDetailPage, layout: 'backoffice', hidden: true, permission: PERMISSIONS.HR_MANAGE_PAYROLL, name: 'hrPayrollDetail' },
+  // Hoa hồng kỹ thuật (docs/api-contracts/hr-commission.md): đọc HR.ViewPayroll; đối soát/duyệt/huỷ
+  // gated lại bằng HR.ManagePayroll trong trang.
+  { path: 'hr/commissions', element: CommissionsPage, layout: 'backoffice', group: 'finance_hr', icon: 'BadgePercent', title: 'Hoa hồng kỹ thuật', description: 'Hoa hồng phiếu sửa theo kỳ, duyệt và trả qua lương', permission: PERMISSIONS.HR_VIEW_PAYROLL, name: 'hrCommissions' },
   { path: 'hr/salary-structures', element: SalaryStructurePage, layout: 'backoffice', hidden: true, permission: PERMISSIONS.HR_MANAGE_PAYROLL, name: 'hrSalaryStructures' },
   { path: 'hr/pit-finalization', element: PitFinalizationPage, layout: 'backoffice', hidden: true, allowedRoles: ['Admin', 'HR'], name: 'hrPitFinalization' },
   // D06 (+4h, binding): tham số lương/thuế/BH theo mốc hiệu lực. Đọc: HR.ViewPayroll (HR xem

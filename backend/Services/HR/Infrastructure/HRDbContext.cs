@@ -42,6 +42,10 @@ public class HRDbContext : DbContext
     public DbSet<StatutoryParameter> StatutoryParameters => Set<StatutoryParameter>();
     public DbSet<PublicHoliday> PublicHolidays => Set<PublicHoliday>();
 
+    // ===== Hoa hồng kỹ thuật (phiếu sửa đã thu tiền -> bảng lương) =====
+    public DbSet<CommissionPolicy> CommissionPolicies => Set<CommissionPolicy>();
+    public DbSet<CommissionEntry> CommissionEntries => Set<CommissionEntry>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.HasDefaultSchema("hr");
@@ -506,6 +510,9 @@ public class HRDbContext : DbContext
         // DateTime, trong khi CSDL thật là `timestamp without time zone`. Ghim lại đúng thực tế,
         // rồi trả CheckInTime/CheckOutTime về timestamptz - đó là hai cột duy nhất trong HR
         // biểu diễn một THỜI ĐIỂM thật (chuyển đổi hàng loạt nằm trong backlog).
+        modelBuilder.ApplyConfiguration(new CommissionEntryConfiguration());
+        modelBuilder.ApplyConfiguration(new CommissionPolicyConfiguration());
+
         PostgreSQLConfig.ConfigureCommonColumnProperties(modelBuilder);
         modelBuilder.Entity<AttendanceRecord>()
             .Property(e => e.CheckInTime).HasColumnType("timestamp with time zone");

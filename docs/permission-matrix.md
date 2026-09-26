@@ -241,7 +241,7 @@ Route chứa đoạn `admin`, `backoffice`, `internal` không bao giờ công kh
 | `/api/catalog/**` | GET/HEAD | Danh mục sản phẩm là mặt tiền cửa hàng; chỉ GET. |
 | `/api/content/**` | GET/HEAD | Trang tĩnh, bài viết, banner hiển thị cho khách; chỉ GET. |
 | `/api/promotions` | GET/HEAD | Danh sách khuyến mãi đang chạy hiển thị trên storefront. |
-| `/api/promotions/{code}` | GET/HEAD | Tra cứu một mã khuyến mãi trước khi đăng nhập. |
+| `/api/promotions/{code}` | GET/HEAD | Xem một khuyến mãi ĐANG CHẠY (Promotion.RunningPredicate); nháp/tạm dừng -> 404, nhân viên dùng /admin/{id}. |
 | `/api/stores` | GET/HEAD | D09: danh sách cửa hàng/địa chỉ liên hệ công khai. |
 | `/api/stores/{id}` | GET/HEAD | D09: chi tiết một cửa hàng. |
 | `/api/ai/recommendations/**` | GET/HEAD | Gợi ý sản phẩm cho khách vãng lai. |

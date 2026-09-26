@@ -20,6 +20,7 @@ import { backofficeAccountingRoutes } from './backoffice-accounting.routes';
 import { backofficeCrmRoutes } from './backoffice-crm.routes';
 import { backofficeServiceRoutes } from './backoffice-service.routes';
 import { standaloneRoutes } from './standalone.routes';
+import { storefrontCmsRoutes } from './storefront-cms.routes';
 
 export const routes: RouteDef[] = [
   ...storefrontShopRoutes,
@@ -38,6 +39,8 @@ export const routes: RouteDef[] = [
   ...backofficeCrmRoutes,
   ...backofficeServiceRoutes,
   ...standaloneRoutes,
+  // LUÔN cuối: catch-all `/:slug` cho trang CMS (trước `*` NotFound của App.tsx).
+  ...storefrontCmsRoutes,
 ];
 
 export const redirects: RedirectDef[] = [

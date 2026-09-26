@@ -45,6 +45,7 @@
       .seo-snapshot p,.seo-snapshot li{font-size:15px;line-height:1.6;color:#52525b;margin:0 0 6px}
       .seo-snapshot ul{padding-left:18px}
       .seo-snapshot a{color:#c81828;text-decoration:none}
+      .seo-crumbs,.seo-pager{font-size:13px;margin:0 0 12px}
       @media(prefers-color-scheme:dark){.seo-shell{color:#fafafa;background:#0c0c0e}
       .seo-shell-header{background:#151518;border-color:#2a2a30}
       .seo-snapshot p,.seo-snapshot li{color:#a1a1aa}}
@@ -63,9 +64,10 @@
              docs/design-guidelines.md §"SEO shell". -->
         <div class="seo-shell-header"></div>
         <!-- seo:body -->
-        <!-- The SEO shell injects a minimal semantic snapshot of the page here
-             (h1, key facts, links). React clears #root on first render, so the
-             browser never shows both. Leave this comment in place. -->
+        <!-- Everything between these two markers is REPLACED by the SEO shell
+             with a server-rendered <main class="seo-snapshot"> (h1, price, links,
+             article text). main.tsx uses createRoot (NOT hydrateRoot), so React
+             discards it on first render. Keep both markers. -->
         <!-- /seo:body -->
       </div>
     </div>

@@ -41,6 +41,7 @@ warn-level rule in `frontend/eslint.config.js`.
 | `/thanh-toan` | noindex | CheckoutPage | |
 | `/tai-khoan` | noindex | AccountPage | + `/tai-khoan/{orders,orders/:orderId,returns/new,returns/:id,loyalty,addresses,wishlist}` |
 | `/login`, `/register`, `/forgot-password`, `/reset-password` | noindex | unchanged | D11: no SEO value, 20+ call sites, backend emails a literal `{Frontend:Url}/reset-password` link |
+| `/:slug` | index | CmsPage (`pages/cms/cms-page.tsx`) | **catch-all, LAST in the manifest** (`storefront-cms.routes.ts`). Published `CMSPage` by slug via `SafeHtml`; unknown/unpublished -> NotFoundPage (shell: real 404). Static segments always outrank it (React Router ranking; shell: `IsFallback` provider after template-only prefixes). Fixed/policy slugs `<Navigate>` to their canonical URL (`cms-page-paths.ts` = `CmsPagePaths.cs`) |
 
 ## Deliberately NOT renamed (D11 scope note)
 
@@ -99,3 +100,25 @@ for `layout: 'storefront'` routes — W2-17 (seo-shell) reads it to decide wheth
 real `<title>`/JSON-LD/sitemap entry or a `noindex` template. Listing pages with filter/sort
 query params are `index` here but must become `noindex,follow` **dynamically** at the query-string
 level — that logic lives in W2-17, this manifest only carries the path-level default.
+
+## Trang CMS `/:slug` — gợi ý cho chủ cửa hàng
+
+Tạo ở Back office -> Nội dung -> Trang, bật **Xuất bản**. Slug chỉ gồm chữ thường không dấu, số và
+gạch nối. Trang xuất hiện ngay ở `https://<tên miền>/<slug>` và trong `sitemap.xml` (tối đa 2 phút
+do cache). Slug trùng đường dẫn có sẵn (`san-pham`, `gio-hang`, `khuyen-mai`...) sẽ được đưa về
+`/chinh-sach/<slug>`; 6 slug chính sách (`bao-hanh`, `doi-tra`, `van-chuyen`, `huong-dan-thanh-toan`,
+`kiem-hang`, `khieu-nai`) luôn ở `/chinh-sach/<slug>`.
+
+Hai trang nên có:
+
+1. **Hướng dẫn mua hàng** — slug `huong-dan-mua-hang` -> `/huong-dan-mua-hang`. Nội dung gợi ý:
+   các bước đặt hàng trên web (chọn sản phẩm, giỏ hàng, thông tin nhận hàng, xác nhận), đặt qua
+   điện thoại/Zalo, mua tại cửa hàng, cách tra cứu đơn (`/tra-cuu-don-hang`), thời gian giao dự kiến.
+2. **Hướng dẫn thanh toán** — slug `huong-dan-thanh-toan`. Trang này **đã có sẵn trong dữ liệu mẫu**
+   và nằm trong khung chính sách: URL là `/chinh-sach/huong-dan-thanh-toan` (gõ
+   `/huong-dan-thanh-toan` sẽ được chuyển 301 về đó). Chỉ cần sửa nội dung thật: các hình thức
+   (tiền mặt khi nhận hàng, chuyển khoản/QR, VNPay/MoMo nếu đã bật), số tài khoản, cú pháp nội dung
+   chuyển khoản, xuất hoá đơn VAT, trả góp nếu có.
+
+Mỗi trang nên điền **Tiêu đề SEO** và **Mô tả SEO** (dùng cho Google/Cốc Cốc); để trống thì hệ
+thống lấy tiêu đề trang và 160 ký tự đầu của nội dung.

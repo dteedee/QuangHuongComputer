@@ -14,10 +14,11 @@ import { Button } from '../../../components/ui/Button';
 import { DependentsEditor } from '../../../components/hr/dependents-editor';
 import { SalaryStructureHistory } from '../../../components/hr/salary-structure-history';
 import { EmployeeAccountLinkPanel } from '../../../components/hr/employee-account-link-panel';
+import { CommissionPolicyPanel } from '../../../components/hr/commission-policy-panel';
 import { z } from 'zod';
 import { validationMessages as msg } from '../../../lib/validation/messages';
 
-type EditTab = 'info' | 'account' | 'dependents' | 'contracts' | 'salary';
+type EditTab = 'info' | 'account' | 'dependents' | 'contracts' | 'salary' | 'commission';
 
 export const EmployeesPage = () => {
     const [searchTerm, setSearchTerm] = useState('');
@@ -407,7 +408,7 @@ export const EmployeesPage = () => {
             >
                 {editingEmployee && (
                     <div className="flex gap-1 mb-6 border-b border-gray-100">
-                        {(['info', 'account', 'dependents', 'contracts', 'salary'] as EditTab[]).map(t => (
+                        {(['info', 'account', 'dependents', 'contracts', 'salary', 'commission'] as EditTab[]).map(t => (
                             <button
                                 key={t}
                                 type="button"
@@ -434,6 +435,9 @@ export const EmployeesPage = () => {
                 )}
                 {editingEmployee && editTab === 'salary' && (
                     <SalaryStructureHistory employeeId={editingEmployee.id} />
+                )}
+                {editingEmployee && editTab === 'commission' && (
+                    <CommissionPolicyPanel employeeId={editingEmployee.id} />
                 )}
 
                 {(!editingEmployee || editTab === 'info') && (
@@ -582,6 +586,7 @@ function tabLabel(t: EditTab): string {
         case 'dependents': return 'Người phụ thuộc';
         case 'contracts': return 'Hợp đồng';
         case 'salary': return 'Cơ cấu lương';
+        case 'commission': return 'Hoa hồng';
     }
 }
 

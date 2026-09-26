@@ -1,5 +1,7 @@
 using System.Security.Claims;
+using BuildingBlocks.Messaging.IntegrationEvents;
 using BuildingBlocks.Security;
+using MassTransit;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -42,7 +44,7 @@ public static class PaymentHandoverEndpoints
             }
         });
 
-        adminGroup.MapPut("/work-orders/{id:guid}/pay", async (Guid id, RecordPaymentDto dto, RepairDbContext db, ClaimsPrincipal user) =>
+        adminGroup.MapPut("/work-orders/{id:guid}/pay", async (Guid id, RecordPaymentDto dto, RepairDbContext db, IPublishEndpoint bus, ClaimsPrincipal user) =>
         {
             var workOrder = await db.WorkOrders.FindAsync(id);
             if (workOrder == null)
@@ -56,6 +58,8 @@ public static class PaymentHandoverEndpoints
                     null, TechnicianAccess.GetUserName(user));
                 db.WorkOrderActivityLogs.Add(log);
                 await db.SaveChangesAsync();
+                // HR ghi nhận hoa hồng kỹ thuật (đọc lại phiếu qua IRepairCommissionSourceQuery).
+                await bus.Publish(new RepairWorkOrderSettlementChangedEvent(workOrder.Id, DateTime.UtcNow));
                 return Results.Ok(new { Message = "Payment recorded", Status = workOrder.Status.ToString(), workOrder.TotalCost });
             }
             catch (InvalidOperationException)

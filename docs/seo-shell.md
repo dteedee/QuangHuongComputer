@@ -1,10 +1,8 @@
 # SEO shell (W2-17 / D11)
 
-Owner: W2-17. Binding source: `decisions/D11-seo-va-kien-truc-render.md`. Scope shipped this track:
-**17a only** — head/meta/JSON-LD/status codes/sitemap/robots. **17b (body content snapshot) is NOT
-shipped** — it is gated on W3-G measuring CLS with a real build, which cannot happen on this
-machine (frontend builds are off-limits per D12). `SeoPage.SnapshotHtml` exists in the contract and
-is wired through end-to-end, but every provider in this track always sets it to `null`.
+Owner: W2-17. Binding source: `decisions/D11-seo-va-kien-truc-render.md`. Shipped: head/meta/JSON-LD/
+status codes/sitemap/robots (17a) **and** a server-rendered body fragment inside `#root` for product,
+category, news, promotion and CMS pages (see "Body fragment" below).
 
 ## What it does
 
@@ -15,6 +13,55 @@ The edge (`deploy/Caddyfile`) rewrites everything that isn't a static asset or a
 (`/api/*`, `/hubs/*`, `/media/*`, `/uploads/*`, `/health*`, `/sitemap.xml`, `/robots.txt`) to
 `/_shell{uri}`. If the shell is unreachable, the edge falls back to the static `index.html` — the
 SPA still works with generic meta tags.
+
+## Body fragment (`SeoPage.Body`)
+
+Cốc Cốc and Bing index a lot of pages without running JS, so the shell also paints a minimal,
+readable `<main class="seo-snapshot">` between `<!-- seo:body -->` and `<!-- /seo:body -->`:
+
+| Page | Content |
+|---|---|
+| `/san-pham/{slug}` | breadcrumb links, H1, `Giá` (= `EffectivePrice`, same as the JSON-LD Offer), `Tình trạng` (from `Product.Status`), `Thương hiệu`, up to 8 key specs (`ProductSpecGroupBuilder`, structured -> legacy JSON), 300-char plain-text description |
+| `/danh-muc/{slug}` | breadcrumb, H1 (`… - Trang N` past page 1), plain-text intro, `<ul>` of the page's ≤24 product links with prices, `rel=prev/next` pager links (`page=1` -> clean URL) |
+| `/tin-tuc/{slug}`, `/khuyen-mai/{slug}`, CMS pages | breadcrumb, H1, the body through `SeoHtmlSanitizer` |
+
+- **Data, not markup.** Providers return `SeoBodyFragment` (plain strings + root-relative hrefs);
+  `BuildingBlocks.Seo.SeoShellBodyRenderer` HTML-encodes everything (`HtmlEncoder` with all Unicode
+  ranges — Vietnamese stays readable, `<>&"'` are escaped) and only emits `<a>` for root-relative
+  paths (never `//host`, never a scheme). The only pre-built HTML is `SeoBodyFragment.Article`, of type
+  `SanitizedHtml` whose constructor is internal: it can only come out of `SeoHtmlSanitizer.Sanitize`, an
+  allow-list rebuilder (p, br, h2–h4, lists, strong/b/em/i/u, blockquote, a, tables; `h1` -> `h2`;
+  script/style/iframe/svg/... dropped WITH content; every attribute dropped except a vetted `href`;
+  external links get `rel="nofollow noopener"`; unbalanced tags closed).
+- **No hydration.** `main.tsx` mounts with `createRoot` (not `hydrateRoot`), so React replaces the
+  fragment on first render; markup never has to match React's output.
+- **Styling / CSP.** `.seo-snapshot`, `.seo-crumbs`, `.seo-pager` live in the existing inline
+  `<style>` of `frontend/index.html` (≈960 B; `style-src` already allows it). No inline `style=`, no
+  scripts. Header height placeholder (`.seo-shell-header`) keeps CLS at the D11 budget.
+- **Cache.** The fragment is part of the response body, so it rides the same `seo-shell` output-cache
+  entry (path + `page` + filtered flag); nothing new enters the key.
+- Tests: `UnitTests/Seo/{SeoHtmlSanitizer,SeoShellBodyRenderer,CatalogSeoBody,CmsPageSeoProvider}Tests.cs`,
+  `SeoShellResolveOrderTests.cs` (needs `-p:IncludeApiGatewayTests=true`), and
+  `IntegrationTests/SeoShellBodyTests.cs` (`/_shell/san-pham/<slug>` contains H1 + price; the fixture
+  serves a stub `index.html` via `ShellTemplateStub`).
+
+## CMS catch-all `/{slug}` (`CmsPageSeoProvider`)
+
+Published `CMSPage` rows without a dedicated route (e.g. `huong-dan-mua-hang`) answer at `/{slug}`.
+`ISeoPageProvider.IsFallback = true` puts it LAST: redirect table -> specific providers ->
+`SeoTemplateOnlyPrefixes` -> fallback providers -> 404. So it can never shadow `/gio-hang`, `/login`
+or an old URL that the redirect manager 301s. One URL per page (`Content/Seo/CmsPagePaths.cs`,
+mirrored by `frontend/src/pages/cms/cms-page-paths.ts`):
+
+- fixed routes (`gioi-thieu`, `lien-he`, `dieu-khoan`, `bao-mat`) -> `/{slug}` (`ContentPageSeoProvider`)
+- policy slugs (PolicyPage sidebar: `bao-hanh`, `doi-tra`, `van-chuyen`, `huong-dan-thanh-toan`,
+  `kiem-hang`, `khieu-nai`) and slugs colliding with a real route (`CmsPagePaths.ReservedSlugs`) ->
+  `/chinh-sach/{slug}`
+- anything else -> `/{slug}`
+
+Any other spelling 301s to the canonical one (`/huong-dan-thanh-toan` -> `/chinh-sach/huong-dan-thanh-toan`,
+`/chinh-sach/huong-dan-mua-hang` -> `/huong-dan-mua-hang`). Sitemap: `CmsPageSeoProvider` lists the
+catch-all pages, `ContentPageSeoProvider` the fixed/policy ones. Unpublished or unknown slug -> 404.
 
 ## Redirect manager (runs BEFORE providers)
 
@@ -97,8 +144,9 @@ flag, so a shared link with tracking params doesn't fragment the cache. A respon
 - `<!-- seo:head --> ... <!-- /seo:head -->` — replaced WHOLESALE with the rendered head block
   (title, meta, canonical, OG, JSON-LD `<script>` tags). If the markers are missing (template
   drifted), the shell injects before `</head>` instead of failing.
-- `<!-- seo:body -->` — single marker inside `#root`, where a W2-17b snapshot would be spliced in.
-  Unused this track (every `SeoPage.SnapshotHtml` is `null`).
+- `<!-- seo:body --> ... <!-- /seo:body -->` — inside `#root`; everything between them is replaced
+  by the rendered body fragment when `SeoPage.Body` is set (no end marker -> inserted after the start
+  marker; no start marker -> template untouched).
 
 ## Template loading (`SeoShellTemplateLoader`)
 
@@ -131,9 +179,12 @@ the "ApiGateway/Seo" exception above only applies to data Content does not refer
 | `PromotionSeoProvider` | `/khuyen-mai`, `/khuyen-mai/{slug}` | `Post.PublishedPredicate` + type `Promotion`; code count via `Promotion.RunningPredicate` | list (only when non-empty) + every promotion post |
 | `FlashSaleSeoProvider` | `/flash-sale` | `Promotion.RunningPredicate` + `Type = FlashSale` + at least one reward with a real `FlashPrice` | `/flash-sale` only while a sale is running (`hourly`) |
 | `ContentPageSeoProvider` | `/chinh-sach/{promotions,khuyen-mai,news,tin-tuc}` | — | never (301 to `/khuyen-mai` / `/tin-tuc`) |
+| `ContentPageSeoProvider` | `/gioi-thieu`, `/lien-he`, `/dieu-khoan`, `/bao-mat`, `/chinh-sach/{slug}` | `CMSPage.IsPublished` | fixed + policy pages at their `CmsPagePaths` URL |
+| `CmsPageSeoProvider` (fallback) | `/{slug}` | `CMSPage.IsPublished` | every catch-all CMS page |
 
 `Promotion.RunningPredicate(utcNow)` (`Status == Active && StartAt <= now && (EndAt == null || EndAt >= now)`)
-is the one "running" predicate shared by `GET /api/content/promotions/active`, `GET /api/promotions/available`
+is the one "running" predicate shared by `GET /api/content/promotions/active`, `GET /api/promotions/available`,
+the anonymous `GET /api/promotions/{id}` (draft/paused -> 404; staff use `GET /api/promotions/admin/{id}`)
 and these providers — same D10 reasoning as `Post.PublishedPredicate`. Empty listing pages answer 200
 (the SPA has a real empty state) with `noindex,follow`, never a 404. Tests: `Tests/UnitTests/Seo/`.
 

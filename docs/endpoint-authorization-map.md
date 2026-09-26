@@ -80,6 +80,8 @@ W1-10 đã cho mỗi nhóm lồng một policy riêng để không phụ thuộc
 | `/api/hr`, `/leaves`, `/contracts`, `/approvals`, dependents, assets | `PermissionModules.HR` | |
 | `/api/hr/attendance` (quản trị), `/shifts`, `/shift-assignments` | `PermissionModules.Attendance` | |
 | `/api/hr/payroll`, salary-structures, allowances, pit-finalization | `PermissionModules.Payroll` | Accountant có `HR.ManagePayroll` (D06) |
+| `/api/hr/commissions` (list, `sync`, `approve`, `{id}/reverse`), `/api/hr/employees/{id}/commission-policies` | `PermissionModules.Payroll` (GET `HR.ViewPayroll`, POST `HR.ManagePayroll`) | hoa hồng kỹ thuật là một khoản của bảng lương — không đẻ quyền mới |
+| `/api/hr/commissions/mine` | `SecurityPolicies.Staff` | tường minh, thắng convention của nhóm; handler lọc theo `Employee.UserId` = người gọi |
 | `/api/hr/{attendance,timesheet-monthly,overtime,self-service}` (nhánh tự phục vụ) | `SecurityPolicies.Staff` | trước W1-10 là `RequireAuthorization()` trống ⇒ Customer vào được |
 | `/api/accounting`, `/einvoice`, `/tax-reports`, `/tax` | `PermissionModules.Accounting` | |
 | `/api/warranty` | `SecurityPolicies.Authenticated` | bảo hành của tôi |
@@ -101,7 +103,7 @@ W1-10 đã cho mỗi nhóm lồng một policy riêng để không phụ thuộc
 
 Các nhánh tự phục vụ khác đã lọc theo danh tính: `/api/sales/*` (cart/orders/wishlist/loyalty),
 `/api/sales/addresses`, `/api/payments/{id}` + `/initiate`, `/api/warranty/claims`, `/api/repair/*`,
-`/api/hr/self-service`, `/api/chat/conversations`, `/api/notifications`,
+`/api/hr/self-service`, `/api/hr/commissions/mine`, `/api/chat/conversations`, `/api/notifications`,
 `/api/catalog/pc-builder/builds/my`.
 
 ## 5. Endpoint công khai

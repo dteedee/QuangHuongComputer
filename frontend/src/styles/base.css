@@ -158,3 +158,40 @@ body {
   .line-mask > span { animation: none; transform: none; }
   .sk::after { display: none; }
 }
+
+/* --- bottom stack: lớp nổi dưới đáy màn hình phối hợp qua biến ------------
+ * Cờ trên <html> do component tự bật (components/layout/use-root-flag.ts):
+ *   data-mobile-nav  = MobileBottomNav đang hiện (chỉ có tác dụng < lg)
+ *   data-sticky-buy  = thanh mua nhanh trang sản phẩm đang hiện
+ * Không component nào đo chiều cao component khác; tất cả đọc hai biến dưới. */
+:root {
+  --mobile-nav-offset: 0px;
+  --sticky-buy-offset: 0px;
+}
+:root[data-sticky-buy] { --sticky-buy-offset: 4.25rem; }
+@media (max-width: 1023.98px) {
+  :root[data-mobile-nav] { --mobile-nav-offset: calc(3.5rem + env(safe-area-inset-bottom, 0px)); }
+}
+
+/* nội dung trang chừa chỗ cho thanh điều hướng */
+.pb-mobile-nav { padding-bottom: var(--mobile-nav-offset); }
+
+/* thanh dính đáy (mua nhanh, so sánh) đứng ngay trên thanh điều hướng */
+.bottom-mobile-nav { bottom: var(--mobile-nav-offset); }
+
+/* thanh mua nhanh: có thanh điều hướng bên dưới thì safe-area đã thuộc về thanh đó */
+.sticky-buy-bar { padding-bottom: max(.75rem, env(safe-area-inset-bottom, 0px)); }
+@media (max-width: 1023.98px) {
+  :root[data-mobile-nav] .sticky-buy-bar { padding-bottom: .75rem; }
+}
+
+/* nút nổi (chat, lên đầu trang): trên cả thanh điều hướng lẫn thanh mua nhanh */
+.bottom-floating { bottom: calc(var(--mobile-nav-offset) + var(--sticky-buy-offset) + 1rem); }
+@media (min-width: 1024px) {
+  .bottom-floating { bottom: calc(var(--sticky-buy-offset) + 1.5rem); }
+}
+/* nút nổi thứ hai (lên đầu trang) xếp trên nút chat 56px + khe 16px */
+.bottom-floating-2 { bottom: calc(var(--mobile-nav-offset) + var(--sticky-buy-offset) + 5.5rem); }
+@media (min-width: 1024px) {
+  .bottom-floating-2 { bottom: calc(var(--sticky-buy-offset) + 6rem); }
+}

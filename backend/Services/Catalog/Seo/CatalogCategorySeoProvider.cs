@@ -64,6 +64,7 @@ public sealed class CatalogCategorySeoProvider : ISeoPageProvider
             CanonicalPath = canonicalPath,
             Robots = isFiltered ? "noindex,follow" : "index,follow",
             JsonLd = jsonLd,
+            Body = CatalogSeoBodyBuilder.Category(category, products, page, total, PageSize),
         };
     }
 
