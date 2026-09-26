@@ -11,8 +11,8 @@ Base paths: `/api/auth` (accounts, roles), `/api/identity/2fa`, `/api/identity/s
 `POST /api/auth/login` `{ email, password }` answers one of **two different shapes**:
 
 ```jsonc
-// 2FA OFF - unchanged from before W1-2
-{ "token": "<jwt>", "refreshToken": "<opaque>", "user": { id, email, fullName, roles[], permissions[] } }
+// 2FA OFF - the refresh token is NOT in the body: it is set as the HttpOnly `qh_rt` cookie (see §3)
+{ "token": "<jwt>", "user": { id, email, fullName, roles[], permissions[] } }
 
 // 2FA ON - NO token field at all
 { "requiresTwoFactor": true, "challengeToken": "<opaque>", "expiresInSeconds": 300, "message": "..." }
@@ -60,6 +60,12 @@ Refresh lifetime: `Jwt:RefreshDays` (default 14; legacy key `Jwt:RefreshTokenLif
 - **Reuse detection:** presenting a token that was already rotated away (`IsRevoked && ReplacedByToken != null`)
   revokes the whole family and stamps `UserSessions.RevokedReason = 'TokenReuse'`.
 - `POST /api/auth/logout` closes the **device**, not just the one token.
+- **Transport (fix/w1-auth-cookies):** the refresh token is only ever the cookie `qh_rt`
+  (`HttpOnly; Secure; SameSite=Strict; Path=/api/auth`), set by login, `/login/2fa`, `/google` and
+  `/refresh-token`, expired by `/logout`. `/refresh-token` and `/logout` read the cookie (a body token is
+  ignored), require `X-Requested-With: XMLHttpRequest` (400 otherwise), and `/refresh-token` answers
+  `{ token, user }` + a rotated cookie. A rejected refresh also expires the cookie. `/refresh-token` is on
+  the general rate limit, not `auth` (the SPA refreshes on every page load; the token is unguessable).
 
 | route | effect |
 |---|---|

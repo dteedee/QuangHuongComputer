@@ -129,6 +129,23 @@ Contract: `docs/seo-shell.md`, `docs/seo-url-contract.md`.
 - **Identity**: JWT (HS256, validated issuer/audience/lifetime/key), 60-minute access tokens,
   refresh tokens hashed at rest with rotation and reuse detection, real revocation (security
   stamp checked per request), 2FA.
+- **Browser token storage**: nothing auth-related lives in localStorage. The refresh token travels
+  only as the `qh_rt` cookie (`HttpOnly; Secure; SameSite=Strict; Path=/api/auth`, Secure dropped
+  only for a Development host over plain HTTP) set by login, 2FA, Google login and refresh and
+  expired by logout; login/refresh bodies carry just `{ token, user }`. The access token is held in
+  JS memory (`frontend/src/lib/auth/access-token-store.ts`); on page load the SPA silently calls
+  `/api/auth/refresh-token`, and a 401 triggers one shared refresh (single-flight in the tab, Web
+  Lock across tabs so rotation never trips reuse detection) and a replay. SignalR's
+  `accessTokenFactory` reads the same in-memory token. **CSRF**: SameSite=Strict, plus the two
+  cookie routes (refresh-token, logout) reject requests without `X-Requested-With: XMLHttpRequest`
+  (a custom header forces a CORS preflight cross-origin). The routes no longer read a token from
+  the body (mobile/ never signs in, so no transition window). The SPA reaches the API same-origin:
+  Vite proxies `/api`, `/hubs`, `/media`, `/uploads` in dev, Caddy does in prod.
+- **XSS containment**: one CSP (`BuildingBlocks/Security/ContentSecurityPolicy.cs`) sent by the API
+  and, identically, by Caddy for static responses (a unit test compares them); `script-src` has no
+  `'unsafe-inline'` (the built SPA has no inline scripts; the shell's JSON-LD is data and is
+  serialised with `<` escaped). Server/CMS HTML reaches the DOM only through `SafeHtml`
+  (DOMPurify); a frontend test fails on any other `dangerouslySetInnerHTML` or `innerHTML =` sink.
 - **Money paths fail closed**: prices, quantities and shipping fees are rebuilt server-side at
   checkout; payment webhooks verify HMAC on the raw body with constant-time comparison, refuse to
   run at all when the secret is empty or a placeholder (503), compare the amount before succeeding,

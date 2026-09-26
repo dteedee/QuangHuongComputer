@@ -47,7 +47,7 @@ public static class TwoFactorLoginEndpoint
                 // 2FA was switched off while this challenge was open. The password
                 // was already proven, so honour the login rather than dead-ending it.
                 await challenges.ConsumeAsync(challenge);
-                return Results.Ok(await LoginCompletion.CompleteAsync(user, userManager, tokenIssuer, httpContext));
+                return RefreshTokenCookie.SignIn(httpContext, await LoginCompletion.CompleteAsync(user, userManager, tokenIssuer, httpContext));
             }
 
             // W1-2 (thẩm định): TwoFactorAttemptGuard trước đây chỉ chạy ở /2fa/verify-setup và
@@ -90,7 +90,7 @@ public static class TwoFactorLoginEndpoint
             await db.SaveChangesAsync();
             await challenges.ConsumeAsync(challenge);
 
-            return Results.Ok(await LoginCompletion.CompleteAsync(user, userManager, tokenIssuer, httpContext));
+            return RefreshTokenCookie.SignIn(httpContext, await LoginCompletion.CompleteAsync(user, userManager, tokenIssuer, httpContext));
         }).WithValidation<LoginTwoFactorDto>()
           // W4-5: bước 2 của đăng nhập BẮT BUỘC ẩn danh (chưa có token nào được phát ở bước 1).
           // Không lộ tài khoản có tồn tại hay không: đầu vào là challengeToken chứ không phải

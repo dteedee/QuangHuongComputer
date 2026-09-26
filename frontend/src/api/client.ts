@@ -1,13 +1,16 @@
 import axios, { type AxiosError } from 'axios';
 import toast from 'react-hot-toast';
 import { normalizeApiError } from '../lib/api-error';
-import { browserStorage } from '../lib/browser-storage';
+import { API_ORIGIN } from '../lib/api-origin';
+import { accessTokenStore } from '../lib/auth/access-token-store';
 
-// Create axios instance
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+// Same origin by default ('' + '/api'); see lib/api-origin.ts.
 export const client = axios.create({
-  baseURL: `${API_BASE_URL}/api`,
+  baseURL: `${API_ORIGIN}/api`,
   timeout: 30000,
+  // The refresh token is an HttpOnly cookie. Same-origin requests send it anyway; this makes a
+  // cross-origin-but-same-site API (e2e TEST stack) both STORE it on login and SEND it on refresh.
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
   },
@@ -15,10 +18,11 @@ export const client = axios.create({
 
 // Request interceptor — registered exactly once (module-level side effect; ES
 // modules are evaluated once regardless of how many files import `client`).
+// The access token comes from memory only (lib/auth/access-token-store.ts), never localStorage.
 client.interceptors.request.use(
   (config) => {
-    const token = browserStorage.getItem('token');
-    if (token && config.headers) {
+    const token = accessTokenStore.get();
+    if (token && config.headers && !config.headers.Authorization) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
@@ -28,14 +32,8 @@ client.interceptors.request.use(
   }
 );
 
-// Response interceptor — also registered exactly once.
-// LƯU Ý: interceptor refresh-token 401 nằm ở `auth.ts` (setupTokenRefreshInterceptor,
-// gọi trong AuthContext) — dùng đúng path `/auth/refresh-token` và lưu lại refreshToken
-// mới (BE rotate refresh token). Không lặp lại logic đó ở đây để tránh 2 interceptor
-// tranh nhau xử lý cùng 1 lỗi 401. (`auth.ts`/`AuthContext.tsx` register a SECOND
-// response interceptor of their own, and do so twice — once at module load, once per
-// AuthProvider mount; that duplication is real but lives outside this track's file
-// ownership — see `integration-requests-w1.md`.)
+// Response interceptor — also registered exactly once. The 401 -> refresh -> retry interceptor
+// lives in `auth-refresh.ts` (single-flight, cross-tab lock); it is NOT duplicated here.
 client.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {

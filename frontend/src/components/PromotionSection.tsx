@@ -4,12 +4,10 @@ import { Link } from 'react-router-dom';
 import { Calendar, ChevronRight, Tag, Newspaper, Sparkles, ArrowRight, Clock, Eye } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-// Helper to strip HTML tags and get plain text
-const stripHtml = (html: string) => {
-    const tmp = document.createElement('div');
-    tmp.innerHTML = html;
-    return tmp.textContent || tmp.innerText || '';
-};
+// Plain text of server-authored HTML. DOMParser builds an INERT document: no script runs and no
+// <img onerror> fires, unlike `div.innerHTML = html` (a live-document sink even when detached).
+const stripHtml = (html: string) =>
+    new DOMParser().parseFromString(html, 'text/html').body.textContent || '';
 
 // Get category badge color
 const getCategoryColor = (type: string, category?: string) => {

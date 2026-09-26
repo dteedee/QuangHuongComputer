@@ -16,6 +16,7 @@ public static class IdentityEndpoints
         var group = app.MapGroup("/api/auth");
 
         group.MapAuthenticationEndpoints();
+        group.MapRefreshTokenEndpoints();
         group.MapTwoFactorLoginEndpoint();
         group.MapGoogleLoginEndpoint();
         group.MapPasswordResetEndpoints();

@@ -16,6 +16,8 @@
  * - Path tương đối khác (không bắt đầu bằng `/`) → giữ nguyên (không phải seam này lo).
  */
 
+import { API_ORIGIN } from './api-origin';
+
 const ABSOLUTE_URL_RE = /^(https?:|data:|blob:)/i;
 const MEDIA_PATH_RE = /^\/(media|uploads)\//;
 
@@ -27,10 +29,9 @@ function originOf(url: string): string {
     }
 }
 
-// VITE_API_URL luôn có giá trị mặc định trong client.ts (fallback 'http://localhost:5000'),
-// nhưng ở đây đọc độc lập để module này không phụ thuộc ngược vào api/client.ts.
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-const MEDIA_BASE_URL = import.meta.env.VITE_MEDIA_BASE_URL || originOf(API_URL);
+// Cùng nguồn với api/client.ts (lib/api-origin.ts): mặc định '' = cùng origin — Vite (dev) và
+// Caddy (prod) đều proxy /media, /uploads sang API. VITE_API_URL tuyệt đối thì lấy origin của nó.
+const MEDIA_BASE_URL = import.meta.env.VITE_MEDIA_BASE_URL || originOf(API_ORIGIN);
 
 export function resolveMediaUrl(url: string | null | undefined): string {
     if (!url) return '';

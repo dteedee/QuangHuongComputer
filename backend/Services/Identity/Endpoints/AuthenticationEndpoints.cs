@@ -15,7 +15,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Identity.Endpoints;
 
-/// <summary>Register, password login, the 2FA second step, token refresh and revocation.</summary>
+/// <summary>Register, password login and "log out everywhere".</summary>
 public static class AuthenticationEndpoints
 {
     /// <summary>
@@ -120,53 +120,12 @@ public static class AuthenticationEndpoints
                 return Results.Ok(new TwoFactorRequiredDto { ChallengeToken = challengeToken, ExpiresInSeconds = expiresIn });
             }
 
-            return Results.Ok(await LoginCompletion.CompleteAsync(user, userManager, tokenIssuer, httpContext));
+            return RefreshTokenCookie.SignIn(httpContext, await LoginCompletion.CompleteAsync(user, userManager, tokenIssuer, httpContext));
         }).WithValidation<LoginDto>().RequireRateLimiting("auth");
 
         // Step 2 of the 2FA login lives in TwoFactorLoginEndpoint.cs.
 
-        group.MapPost("/refresh-token", async (RefreshTokenRequestDto model, UserManager<ApplicationUser> userManager,
-            IRefreshTokenService refreshTokenService, ITokenIssuer tokenIssuer, HttpContext httpContext) =>
-        {
-            if (string.IsNullOrEmpty(model.RefreshToken))
-                return Results.BadRequest(new { Error = "Refresh token is required" });
-
-            var refreshToken = await refreshTokenService.GetRefreshTokenAsync(model.RefreshToken);
-            if (refreshToken == null) return Results.BadRequest(new { Error = "Invalid refresh token" });
-
-            // Reuse detection. A token that was already rotated away is being
-            // presented again: either it was stolen from the client or the row
-            // was read from the database. Either way the family is compromised,
-            // so it dies instead of producing a fresh pair.
-            if (refreshToken.IsRevoked && refreshToken.ReplacedByToken != null)
-            {
-                await refreshTokenService.HandleReuseAsync(refreshToken, TokenIssuer.ClientIp(httpContext));
-                return Results.BadRequest(new { Error = "Phiên đăng nhập không hợp lệ. Vui lòng đăng nhập lại." });
-            }
-
-            if (!refreshToken.IsActive) return Results.BadRequest(new { Error = "Invalid refresh token" });
-
-            var user = refreshToken.User ?? await userManager.FindByIdAsync(refreshToken.UserId);
-            if (user == null || !user.IsActive) return Results.BadRequest(new { Error = "User not found or inactive" });
-
-            return Results.Ok(await tokenIssuer.RotateAsync(user, refreshToken, model.RefreshToken, httpContext));
-        }).RequireRateLimiting("auth");
-
-        group.MapPost("/logout", async (RefreshTokenRequestDto model, IRefreshTokenService refreshTokenService, HttpContext httpContext) =>
-        {
-            if (string.IsNullOrEmpty(model.RefreshToken))
-                return Results.BadRequest(new { Error = "Refresh token is required" });
-
-            var ip = TokenIssuer.ClientIp(httpContext);
-            var token = await refreshTokenService.GetRefreshTokenAsync(model.RefreshToken);
-
-            // Logging out closes the DEVICE, not just the one token in hand -
-            // otherwise the family's next rotation is still valid.
-            if (token?.SessionId is { } sessionId) await refreshTokenService.RevokeSessionAsync(sessionId, ip, "Logout");
-            else await refreshTokenService.RevokeRefreshTokenAsync(model.RefreshToken, ip);
-
-            return Results.Ok(new { Message = "Logged out successfully" });
-        });
+        // refresh-token and logout (the two cookie-authenticated routes) live in RefreshTokenEndpoints.cs.
 
         // W4-5: chỉ thu hồi token CỦA CHÍNH NGƯỜI GỌI — userId lấy từ claim, không nhận từ body/query.
         // Đổi [Authorize] trống sang policy có tên (SecurityPolicies.Authenticated) để audit

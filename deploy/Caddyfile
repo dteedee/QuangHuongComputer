@@ -24,6 +24,21 @@
 	email {$ACME_EMAIL:admin@example.com}
 }
 
+(security_headers) {
+	# CSP: the SAME policy the API sends (backend/BuildingBlocks/Security/ContentSecurityPolicy.cs,
+	# minus upgrade-insecure-requests — HSTS covers the real domain and the local http://localhost:8080
+	# stack must not be upgraded). ContentSecurityPolicyTests fails if the two strings drift.
+	# `defer` makes these REPLACE what the api container already sent on proxied responses (the SEO
+	# shell HTML) instead of adding a second, differing CSP header next to it.
+	header {
+		defer
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Content-Security-Policy "default-src 'self'; script-src 'self' https://accounts.google.com https://apis.google.com https://www.gstatic.com https://www.google.com https://www.googletagmanager.com https://connect.facebook.net; frame-src 'self' https://accounts.google.com https://www.google.com https://recaptcha.google.com https://www.youtube.com https://www.youtube-nocookie.com https://maps.google.com https://www.facebook.com; connect-src 'self' https://accounts.google.com https://oauth2.googleapis.com https://www.googleapis.com https://www.google.com https://www.googletagmanager.com https://*.google-analytics.com https://*.analytics.google.com https://graph.facebook.com https://www.facebook.com wss: ws:; style-src 'self' 'unsafe-inline' https://accounts.google.com https://fonts.googleapis.com; img-src 'self' data: blob: https://lh3.googleusercontent.com https://www.google.com https://i.ytimg.com https://api.qrserver.com https://*.google-analytics.com https://www.googletagmanager.com https://www.facebook.com https://platform-lookaside.fbsbx.com https://res.cloudinary.com https://*.cloudinary.com; font-src 'self' data: https://fonts.gstatic.com; object-src 'none'; base-uri 'self'; frame-ancestors 'self'; form-action 'self' https://accounts.google.com https://www.facebook.com https://sandbox.vnpayment.vn https://pay.vnpay.vn https://test-payment.momo.vn https://payment.momo.vn"
+	}
+}
+
 # Internal listener the SEO shell fetches `index.html` from (`Seo:ShellTemplateUrl` in prod =
 # `http://web:8081/index.html` — this IS the `web` container, D11 §"Architecture"). Not exposed
 # to the internet; only reachable from other containers on the compose network.
@@ -101,16 +116,14 @@
 	}
 
 	handle_errors {
+		# Error routes do not inherit the site-level `header`, and this one serves the SPA itself.
+		import security_headers
 		root * /srv
 		rewrite * /index.html
 		file_server
 	}
 
-	header {
-		Strict-Transport-Security "max-age=31536000; includeSubDomains"
-		X-Content-Type-Options "nosniff"
-		Referrer-Policy "strict-origin-when-cross-origin"
-	}
+	import security_headers
 
 	log {
 		output stdout

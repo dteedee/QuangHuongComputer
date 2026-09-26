@@ -4,8 +4,6 @@ namespace Identity;
 // `Identity.DTOs`) because that is where the endpoint files already resolved
 // them from; `Identity.DTOs` keeps the user/profile/response shapes.
 
-public record RefreshTokenRequestDto(string RefreshToken);
-
 public record ForgotPasswordDto(string Email);
 
 /// <summary>

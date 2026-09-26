@@ -1,4 +1,6 @@
 import client from './client';
+import { CSRF_HEADERS, refreshSession, type AuthSession } from './auth-refresh';
+import { accessTokenStore, sessionHint } from '../lib/auth/access-token-store';
 
 // ========================================
 // Authentication Types
@@ -16,11 +18,11 @@ interface RegisterRequest {
     recaptchaToken?: string;
 }
 
-interface AuthResponse {
-    token: string;
-    refreshToken: string;
-    user: User;
-}
+/**
+ * Successful sign-in. No `refreshToken` field any more: it arrives as the HttpOnly `qh_rt` cookie
+ * and the SPA never sees it. `token` (the access token) is kept in memory only.
+ */
+type AuthResponse = AuthSession;
 
 /**
  * `POST /auth/login` answers this shape instead of `AuthResponse` when the account has 2FA
@@ -162,45 +164,22 @@ export const authApi = {
     },
 
     /**
-     * Logout user - revoke refresh token
+     * Logout: the backend revokes the device session named by the `qh_rt` cookie and expires the
+     * cookie. The in-memory access token is dropped whatever the network says.
      */
     logout: async (): Promise<void> => {
-        const refreshToken = localStorage.getItem('refreshToken');
-        if (refreshToken) {
-            try {
-                await client.post('/auth/logout', { refreshToken });
-            } catch (error) {
-                console.error('Logout API error:', error);
-            }
+        try {
+            await client.post('/auth/logout', null, { headers: CSRF_HEADERS });
+        } catch (error) {
+            console.error('Logout API error:', error);
+        } finally {
+            accessTokenStore.set(null);
+            sessionHint.clear();
         }
-        // Clear tokens locally
-        localStorage.removeItem('token');
-        localStorage.removeItem('refreshToken');
-        localStorage.removeItem('user');
     },
 
-    /**
-     * Refresh access token using refresh token
-     */
-    refreshToken: async (): Promise<AuthResponse> => {
-        const refreshToken = localStorage.getItem('refreshToken');
-        if (!refreshToken) {
-            throw new Error('No refresh token available');
-        }
-        const response = await client.post<AuthResponse>('/auth/refresh-token', { refreshToken });
-        return response.data;
-    },
-
-    /**
-     * Get current user profile from backend
-     */
-    getCurrentUser: async (): Promise<User | null> => {
-        const userStr = localStorage.getItem('user');
-        if (userStr) {
-            return JSON.parse(userStr);
-        }
-        return null;
-    },
+    /** New access token from the refresh cookie (single-flight). `null` = no live session. */
+    refreshToken: (): Promise<AuthSession | null> => refreshSession(),
 
     /**
      * Get current user full profile with addresses
@@ -215,13 +194,6 @@ export const authApi = {
      */
     updateMyProfile: async (data: { fullName: string; phoneNumber?: string; address?: string }): Promise<{ message: string }> => {
         const response = await client.put<{ message: string }>('/auth/me', data);
-        // Update local storage
-        const userStr = localStorage.getItem('user');
-        if (userStr) {
-            const user = JSON.parse(userStr);
-            user.fullName = data.fullName;
-            localStorage.setItem('user', JSON.stringify(user));
-        }
         return response.data;
     },
 
@@ -409,148 +381,12 @@ export async function revokeAllOtherSessions() {
     return data;
 }
 
-// ========================================
-// Token Refresh Utilities (Simplified)
-// ========================================
-let isRefreshing = false;
-let failedQueue: Array<{
-    resolve: (value?: any) => void;
-    reject: (reason?: any) => void;
-}> = [];
-
-const processQueue = (error: any, token: string | null = null) => {
-    failedQueue.forEach(prom => {
-        if (error) {
-            prom.reject(error);
-        } else {
-            prom.resolve(token);
-        }
-    });
-
-    failedQueue = [];
-};
-
 /**
- * Setup axios interceptors for automatic token refresh
+ * Adopts a session a sign-in call just returned: access token into memory, plus the non-secret
+ * "had a session" hint. The refresh token is already in its HttpOnly cookie. Nothing is written to
+ * localStorage — the 401 -> refresh -> retry interceptor lives in `auth-refresh.ts`.
  */
-export const setupTokenRefreshInterceptor = () => {
-    client.interceptors.response.use(
-        (response) => response,
-        async (error) => {
-            const originalRequest = error.config;
-
-            // If error is not 401 or already retrying, reject
-            if (error.response?.status !== 401 || originalRequest._retry) {
-                return Promise.reject(error);
-            }
-
-            // If refreshing token, add to queue
-            if (isRefreshing) {
-                return new Promise((resolve, reject) => {
-                    failedQueue.push({ resolve, reject });
-                })
-                    .then(token => {
-                        originalRequest.headers['Authorization'] = `Bearer ${token}`;
-                        return client(originalRequest);
-                    })
-                    .catch(err => {
-                        return Promise.reject(err);
-                    });
-            }
-
-            // Start token refresh
-            originalRequest._retry = true;
-            isRefreshing = true;
-
-            const refreshToken = localStorage.getItem('refreshToken');
-
-            if (!refreshToken) {
-                // No refresh token available, redirect to login
-                processQueue(error, null);
-                isRefreshing = false;
-                localStorage.removeItem('token');
-                localStorage.removeItem('refreshToken');
-                localStorage.removeItem('user');
-
-                if (window.location.pathname !== '/login') {
-                    window.location.href = '/login';
-                }
-
-                return Promise.reject(error);
-            }
-
-            try {
-                // Call refresh token endpoint
-                const response = await client.post<AuthResponse>('/auth/refresh-token', { refreshToken });
-                const { token: newToken, refreshToken: newRefreshToken, user } = response.data;
-
-                // Update stored tokens
-                localStorage.setItem('token', newToken);
-                localStorage.setItem('refreshToken', newRefreshToken);
-                localStorage.setItem('user', JSON.stringify(user));
-                client.defaults.headers.common['Authorization'] = `Bearer ${newToken}`;
-
-                // Process queued requests
-                processQueue(null, newToken);
-
-                // Retry original request
-                originalRequest.headers['Authorization'] = `Bearer ${newToken}`;
-                return client(originalRequest);
-
-            } catch (refreshError) {
-                processQueue(refreshError, null);
-                isRefreshing = false;
-
-                localStorage.removeItem('token');
-                localStorage.removeItem('refreshToken');
-                localStorage.removeItem('user');
-
-                if (window.location.pathname !== '/login') {
-                    window.location.href = '/login';
-                }
-
-                return Promise.reject(refreshError);
-            } finally {
-                isRefreshing = false;
-            }
-        }
-    );
-
-    // Request interceptor to add token
-    client.interceptors.request.use(
-        (config) => {
-            const token = localStorage.getItem('token');
-            if (token) {
-                config.headers['Authorization'] = `Bearer ${token}`;
-            }
-            return config;
-        },
-        (error) => {
-            return Promise.reject(error);
-        }
-    );
-};
-
-// Initialize interceptors immediately when module loads
-if (typeof window !== 'undefined') {
-    setupTokenRefreshInterceptor();
-}
-
-// Helper to store auth data after login
-export const storeAuthData = (data: AuthResponse) => {
-    localStorage.setItem('token', data.token);
-    localStorage.setItem('refreshToken', data.refreshToken);
-    localStorage.setItem('user', JSON.stringify(data.user));
-};
-
-// Helper to clear auth data
-export const clearAuthData = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('refreshToken');
-    localStorage.removeItem('user');
-};
-
-// Helper to get stored token
-export const getStoredToken = (): string | null => {
-    return localStorage.getItem('token');
+export const adoptSession = (data: AuthSession): void => {
+    accessTokenStore.set(data.token);
+    sessionHint.set();
 };
