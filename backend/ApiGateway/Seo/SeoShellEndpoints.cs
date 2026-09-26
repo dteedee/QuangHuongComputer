@@ -32,6 +32,7 @@ public static class SeoShellEndpoints
     private static async Task<IResult> HandleShellAsync(
         HttpContext ctx,
         IEnumerable<ISeoPageProvider> providers,
+        IUrlRedirectResolver redirects,
         SeoShellTemplateLoader templateLoader,
         IConfiguration configuration,
         CancellationToken ct)
@@ -50,7 +51,21 @@ public static class SeoShellEndpoints
         // localhost URL is never indexed by accident.
         var siteWideNoindex = siteUrl.Contains("localhost", StringComparison.OrdinalIgnoreCase);
 
-        var page = await ResolvePageAsync(providers, path, query, ct);
+        // Admin-managed redirect table FIRST (docs/seo-shell.md "Redirect manager"): an old URL gets a
+        // real 301/302 (or 410) before any provider or the template is touched.
+        var redirect = await redirects.MatchAsync(path, ct);
+        if (redirect is not null)
+        {
+            redirects.RecordHit(redirect.Id);
+            if (redirect.StatusCode != 410 && redirect.Target is not null)
+            {
+                return SeoShellRedirects.ToRedirect(redirect, siteUrl, query);
+            }
+        }
+
+        var page = redirect?.StatusCode == 410
+            ? SeoShellRedirects.GonePage(path)
+            : await ResolvePageAsync(providers, path, query, ct);
 
         var template = await templateLoader.LoadAsync(ct);
         if (template is null)

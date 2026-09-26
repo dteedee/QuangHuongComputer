@@ -1,6 +1,6 @@
 // GENERATED FILE - do not hand-edit.
 // Source: plans/260917-2100-full-system-overhaul/reports/w1-1-permissions.json
-// (W1-1 permission catalog, seedVersion 2). Regenerate from that JSON
+// (W1-1 permission catalog, seedVersion 3). Regenerate from that JSON
 // if the backend catalog changes - see phase-17-w1-fe-app-shell.md Risk Assessment:
 // "import permission strings from a generated constants/permissions.ts; do not hand-type."
 
@@ -89,6 +89,8 @@ export const PERMISSIONS_CATALOG: readonly PermissionCatalogEntry[] = [
   { key: 'Permissions.Content.ManageMedia', module: 'Content', moduleDisplayName: 'Nội dung', displayName: 'Tải lên và quản lý thư viện ảnh', type: 'Manage', dependsOn: 'Permissions.Content.ViewPages', roles: ['Admin', 'Manager', 'Marketing'] },
   { key: 'Permissions.Content.ManageMenus', module: 'Content', moduleDisplayName: 'Nội dung', displayName: 'Quản lý menu điều hướng', type: 'Manage', dependsOn: 'Permissions.Content.ViewPages', roles: ['Admin', 'Manager', 'Marketing'] },
   { key: 'Permissions.Content.ManageContacts', module: 'Content', moduleDisplayName: 'Nội dung', displayName: 'Xử lý liên hệ từ website', type: 'Manage', dependsOn: 'Permissions.Content.ViewPages', roles: ['Admin', 'Manager', 'Marketing'] },
+  { key: 'Permissions.Content.ViewRedirects', module: 'Content', moduleDisplayName: 'Nội dung', displayName: 'Xem bảng chuyển hướng URL', type: 'View', dependsOn: null, roles: ['Admin', 'Manager', 'Marketing'] },
+  { key: 'Permissions.Content.ManageRedirects', module: 'Content', moduleDisplayName: 'Nội dung', displayName: 'Quản lý chuyển hướng URL (301/302/410), nhập/xuất CSV', type: 'Manage', dependsOn: 'Permissions.Content.ViewRedirects', roles: ['Admin', 'Manager', 'Marketing'] },
   { key: 'Permissions.CRM.ViewCustomers', module: 'CRM', moduleDisplayName: 'Khách hàng', displayName: 'Xem khách hàng', type: 'View', dependsOn: null, roles: ['Admin', 'Manager', 'Sale', 'Marketing'] },
   { key: 'Permissions.CRM.ManageCustomers', module: 'CRM', moduleDisplayName: 'Khách hàng', displayName: 'Sửa thông tin khách hàng', type: 'Manage', dependsOn: 'Permissions.CRM.ViewCustomers', roles: ['Admin', 'Manager', 'Sale'] },
   { key: 'Permissions.CRM.ViewLeads', module: 'CRM', moduleDisplayName: 'Khách hàng', displayName: 'Xem khách hàng tiềm năng', type: 'View', dependsOn: null, roles: ['Admin', 'Manager', 'Sale', 'Marketing'] },

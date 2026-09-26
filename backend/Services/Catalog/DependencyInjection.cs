@@ -29,7 +29,13 @@ public static class DependencyInjection
             var interceptor = serviceProvider.GetService<AuditSaveChangesInterceptor>();
             if (interceptor != null)
                 options.AddInterceptors(interceptor);
+
+            // Đổi slug sản phẩm/danh mục -> tự tạo 301 trong bảng chuyển hướng (Content).
+            var slugRedirects = serviceProvider.GetService<SlugChangeRedirectInterceptor>();
+            if (slugRedirects != null)
+                options.AddInterceptors(slugRedirects);
         });
+        services.AddScoped<SlugChangeRedirectInterceptor>();
 
         // W1-6 / D02: MinIO gỡ hoàn toàn — local disk qua IFileStorage (BuildingBlocks/Storage).
         // Đăng ký ở đây (không phải ServiceRegistration.cs, không thuộc sở hữu track này) vì cả

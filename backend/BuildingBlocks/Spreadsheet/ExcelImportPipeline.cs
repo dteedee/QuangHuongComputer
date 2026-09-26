@@ -79,9 +79,15 @@ public sealed partial class ExcelImportPipeline<TRow> where TRow : new()
                 $"Tệp vượt quá giới hạn {MaxBytes / (1024 * 1024)} MB. Vui lòng chia nhỏ tệp.");
         }
 
+        using var workbook = OpenWorkbook(source);
+        return ReadWorkbook(workbook);
+    }
+
+    /// <summary>Header mapping + row binding over an already-opened workbook (shared by XLSX and CSV uploads).</summary>
+    private ExcelImportResult<TRow> ReadWorkbook(XLWorkbook workbook)
+    {
         var result = new ExcelImportResult<TRow>();
 
-        using var workbook = OpenWorkbook(source);
         var sheet = workbook.Worksheets.FirstOrDefault()
             ?? throw new InvalidDataException("Tệp không có trang tính nào.");
 

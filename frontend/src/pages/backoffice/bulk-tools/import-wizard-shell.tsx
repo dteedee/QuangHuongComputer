@@ -16,6 +16,10 @@ export interface ImportWizardShellProps<TResult> {
     renderResult: (result: TResult, mode: 'dryRun' | 'commit') => ReactNode;
     /** Whether `result` has zero row errors and can be committed. */
     canCommit: (result: TResult) => boolean;
+    /** Accepted upload extensions (lowercase, with dot). Defaults to `.xlsx` only. */
+    acceptExtensions?: string[];
+    /** File name given to the downloaded template. */
+    templateFileName?: string;
 }
 
 const MAX_SIZE_MB = 10;
@@ -35,8 +39,9 @@ function downloadBlob(blob: Blob, filename: string) {
  */
 export function ImportWizardShell<TResult>({
     title, description, warning, onDownloadTemplate, onImport, onDownloadErrors, getErrorToken,
-    extraControls, renderResult, canCommit,
+    extraControls, renderResult, canCommit, acceptExtensions = ['.xlsx'], templateFileName = 'mau-import.xlsx',
 }: ImportWizardShellProps<TResult>) {
+    const acceptLabel = acceptExtensions.join(', ');
     const [file, setFile] = useState<File | null>(null);
     const [dragOver, setDragOver] = useState(false);
     const [busy, setBusy] = useState<'template' | 'dryRun' | 'commit' | 'errors' | null>(null);
@@ -46,7 +51,10 @@ export function ImportWizardShell<TResult>({
 
     const pickFile = (f: File | null) => {
         if (!f) return;
-        if (!f.name.toLowerCase().endsWith('.xlsx')) { notify.error('Sai định dạng', { description: 'Chỉ nhận file .xlsx.' }); return; }
+        if (!acceptExtensions.some((ext) => f.name.toLowerCase().endsWith(ext))) {
+            notify.error('Sai định dạng', { description: `Chỉ nhận file ${acceptLabel}.` });
+            return;
+        }
         if (f.size > MAX_SIZE_MB * 1024 * 1024) { notify.error('File quá lớn', { description: `Tối đa ${MAX_SIZE_MB}MB.` }); return; }
         setFile(f); setResult(null); setCommitted(false);
     };
@@ -65,7 +73,7 @@ export function ImportWizardShell<TResult>({
 
     const downloadTemplate = async () => {
         setBusy('template');
-        try { downloadBlob(await onDownloadTemplate(), 'mau-import.xlsx'); }
+        try { downloadBlob(await onDownloadTemplate(), templateFileName); }
         catch { notify.error('Không tải được file mẫu'); }
         finally { setBusy(null); }
     };
@@ -109,9 +117,9 @@ export function ImportWizardShell<TResult>({
                                 </button>
                             </div>
                         ) : (
-                            <p className="text-sm text-fg-muted">Kéo thả file .xlsx vào đây, hoặc bấm để chọn (tối đa {MAX_SIZE_MB}MB)</p>
+                            <p className="text-sm text-fg-muted">Kéo thả file {acceptLabel} vào đây, hoặc bấm để chọn (tối đa {MAX_SIZE_MB}MB)</p>
                         )}
-                        <input ref={inputRef} type="file" accept=".xlsx" className="hidden" onChange={(e) => pickFile(e.target.files?.[0] ?? null)} />
+                        <input ref={inputRef} type="file" accept={acceptExtensions.join(',')} className="hidden" onChange={(e) => pickFile(e.target.files?.[0] ?? null)} />
                     </div>
 
                     <div className="flex items-center gap-3">

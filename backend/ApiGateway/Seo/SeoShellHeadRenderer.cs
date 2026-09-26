@@ -93,6 +93,10 @@ public static class SeoShellHeadRenderer
     /// <summary>Root-relative or already-absolute path -> absolute URL from `Frontend:Url`. Never from the `Host` header (D11).</summary>
     public static string AbsoluteUrl(string siteUrl, string pathOrUrl)
     {
+        // Root-relative FIRST: on Linux `Uri.TryCreate("/san-pham/x", UriKind.Absolute, ...)` succeeds
+        // as an implicit file path and would yield "file:///san-pham/x" (canonical / Location broken).
+        if (pathOrUrl.StartsWith('/') && !pathOrUrl.StartsWith("//"))
+            return siteUrl.TrimEnd('/') + pathOrUrl;
         if (Uri.TryCreate(pathOrUrl, UriKind.Absolute, out var abs)) return abs.ToString();
         var baseUrl = siteUrl.TrimEnd('/');
         var path = pathOrUrl.StartsWith('/') ? pathOrUrl : "/" + pathOrUrl;

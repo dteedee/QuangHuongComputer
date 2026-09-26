@@ -81,6 +81,8 @@ export const PERMISSIONS = {
   CONTENT_MANAGE_MEDIA: 'Permissions.Content.ManageMedia',
   CONTENT_MANAGE_MENUS: 'Permissions.Content.ManageMenus',
   CONTENT_MANAGE_CONTACTS: 'Permissions.Content.ManageContacts',
+  CONTENT_VIEW_REDIRECTS: 'Permissions.Content.ViewRedirects',
+  CONTENT_MANAGE_REDIRECTS: 'Permissions.Content.ManageRedirects',
   CRM_VIEW_CUSTOMERS: 'Permissions.CRM.ViewCustomers',
   CRM_MANAGE_CUSTOMERS: 'Permissions.CRM.ManageCustomers',
   CRM_VIEW_LEADS: 'Permissions.CRM.ViewLeads',

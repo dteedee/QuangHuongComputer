@@ -937,6 +937,69 @@ namespace Content.Migrations
                     b.ToTable("PromotionUsages", "content");
                 });
 
+            modelBuilder.Entity("Content.Domain.UrlRedirect", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<string>("FromPath")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<long>("HitCount")
+                        .HasColumnType("bigint");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("LastHitAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("Source")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<int>("StatusCode")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ToPath")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("FromPath")
+                        .IsUnique()
+                        .HasDatabaseName("IX_UrlRedirect_FromPath");
+
+                    b.HasIndex("IsActive")
+                        .HasDatabaseName("IX_UrlRedirect_IsActive");
+
+                    b.ToTable("UrlRedirects", "content", t =>
+                        {
+                            t.HasCheckConstraint("CK_UrlRedirects_StatusCode", "\"StatusCode\" IN (301, 302, 410)");
+                        });
+                });
+
             modelBuilder.Entity("Content.Domain.MenuItem", b =>
                 {
                     b.HasOne("Content.Domain.Menu", null)

@@ -7,6 +7,7 @@ namespace BuildingBlocks.Security;
 /// <c>v1</c> = tập quyền đã seed trước đợt tổng rà soát (mọi DB hiện có đã có sẵn).
 /// <c>v2</c> = quyền W1-1 bổ sung; chỉ những mục này được cấp thêm cho DB đã ở v1,
 /// nên các thao tác thu hồi tay của admin không bị ghi đè.
+/// <c>v3</c> = bảng chuyển hướng URL (Content.ViewRedirects / ManageRedirects).
 /// Admin không có ở đây — Admin luôn nhận toàn bộ danh mục.
 /// </summary>
 internal static class RolePermissionMatrixData
@@ -15,9 +16,10 @@ internal static class RolePermissionMatrixData
     {
         var matrix = new Dictionary<string, List<RoleGrant>>(StringComparer.Ordinal);
 
-        void Role(string role, string[] v1, string[] v2) =>
+        void Role(string role, string[] v1, string[] v2, string[]? v3 = null) =>
             matrix[role] = v1.Select(p => new RoleGrant(p, 1))
-                .Concat(v2.Select(p => new RoleGrant(p, 2))).ToList();
+                .Concat(v2.Select(p => new RoleGrant(p, 2)))
+                .Concat((v3 ?? Array.Empty<string>()).Select(p => new RoleGrant(p, 3))).ToList();
 
         // Manager — Quản lý cửa hàng: làm được gần như mọi nghiệp vụ, trừ cấu hình hệ thống, tạo tài khoản và phân vai trò (đã bị W0-3 thu hồi).
         Role(Roles.Manager,
@@ -62,7 +64,8 @@ internal static class RolePermissionMatrixData
                 P.CRM.ViewCampaigns, P.CRM.ManageCampaigns, P.CRM.SendCampaigns,
                 P.HR.ApproveLeave,
                 P.Reporting.ViewHR,
-            });
+            },
+            v3: new[] { P.Content.ViewRedirects, P.Content.ManageRedirects });
         // Sale — Bán hàng: POS + đơn hàng + khách hàng tiềm năng (tiêu chí W1-1). KHÔNG có huỷ đơn, không bán công nợ, không duyệt đổi/trả.
         Role(Roles.Sale,
             v1: new[]
@@ -149,7 +152,8 @@ internal static class RolePermissionMatrixData
                 P.Content.ManageMenus, P.Content.ManageContacts,
                 P.CRM.ViewCustomers, P.CRM.ViewLeads, P.CRM.ViewSegments, P.CRM.ManageSegments,
                 P.CRM.ViewAnalytics, P.CRM.ViewCampaigns, P.CRM.ManageCampaigns, P.CRM.SendCampaigns,
-            });
+            },
+            v3: new[] { P.Content.ViewRedirects, P.Content.ManageRedirects });
         // Kỹ thuật viên tại cửa hàng
         Role(Roles.TechnicianInShop,
             v1: new[]

@@ -40,6 +40,9 @@ public static partial class Permissions
         public const string ManageMenus = "Permissions.Content.ManageMenus";
         /// <summary>D10: hộp thư liên hệ từ storefront.</summary>
         public const string ManageContacts = "Permissions.Content.ManageContacts";
+        /// <summary>Bảng chuyển hướng URL 301/302/410 (giữ thứ hạng Google khi đổi slug / chuyển web cũ).</summary>
+        public const string ViewRedirects = "Permissions.Content.ViewRedirects";
+        public const string ManageRedirects = "Permissions.Content.ManageRedirects";
     }
 
     public static class CRM

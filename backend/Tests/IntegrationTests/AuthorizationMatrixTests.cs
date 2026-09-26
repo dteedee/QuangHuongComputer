@@ -43,6 +43,8 @@ public sealed class AuthorizationMatrixTests
         { "GET", "/api/hr/employees" },
         { "GET", "/api/media/" },
         { "GET", "/api/auth/users" },
+        { "GET", "/api/content/admin/redirects" },
+        { "GET", "/api/content/admin/redirects/export" },
     };
 
     [Theory(DisplayName = "Ma trận quyền: endpoint nội bộ chặn ẩn danh (401) và chặn Customer (403)")]
