@@ -25,6 +25,8 @@ public class PayrollCalculationResult
     public decimal TaxableAllowances { get; init; }
     public decimal ExemptAllowances { get; init; }
     public decimal Bonuses { get; init; }
+    /// <summary>Hoa hồng kỹ thuật (đã nằm trong GrossPay/TaxableGrossIncome qua kernel).</summary>
+    public decimal Commission { get; init; }
     public decimal GrossPay { get; init; }
     public decimal InsurableSalary { get; init; }
     public decimal InsuranceEmployee { get; init; }

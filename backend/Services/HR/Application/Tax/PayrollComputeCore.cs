@@ -30,6 +30,12 @@ public sealed record PayrollEmployeeProfile
     /// <summary>Thưởng chịu thuế 100%, không đóng bảo hiểm (doanh số, lương tháng 13).</summary>
     public decimal Bonuses { get; init; }
 
+    /// <summary>Hoa hồng kỹ thuật đã duyệt đưa vào kỳ này — chịu thuế 100%, không đóng bảo hiểm.</summary>
+    public decimal Commission { get; init; }
+
+    /// <summary>Số khoản hoa hồng cộng lại thành <see cref="Commission"/> (chỉ để ghi phiếu lương).</summary>
+    public int CommissionEntryCount { get; init; }
+
     /// <summary>Lương chính thức của vị trí — dùng kiểm tra lương thử việc ≥ 85% (BLLĐ Đ.26).</summary>
     public decimal OfficialSalaryForProbation { get; init; }
 
@@ -95,7 +101,7 @@ public partial class PayrollCalculationService
             MealAllowanceCash = buckets.MealCash,
             OtherTaxableAllowances = buckets.Taxable,
             NonTaxableAllowances = buckets.NonTaxable,
-            Bonuses = profile.Bonuses,
+            Bonuses = profile.Bonuses + profile.Commission,
             StandardWorkingDays = standardDays,
             HoursPerDay = 8m,
             Overtime = BuildOvertimeEntries(ts),
@@ -116,6 +122,12 @@ public partial class PayrollCalculationService
 
         var b = PayrollTaxCalculator.Calculate(input, periodParameters, payDateParameters);
         AddEngineLines(lines, b, payDateParameters, numberOfDependents, profile.Bonuses);
+        if (profile.Commission > 0m)
+        {
+            lines.Add((PayrollLineType.Bonus,
+                $"Hoa hồng kỹ thuật ({profile.CommissionEntryCount} khoản, chịu thuế, không đóng bảo hiểm)",
+                profile.Commission, true, false));
+        }
 
         // 4. Phạt đi muộn nằm NGOÀI thu nhập tính thuế (là khấu trừ kỷ luật, không phải giảm trừ).
         var lateFine = Round(ts.TotalLateMinutes * lateFinePerMinute);
@@ -139,6 +151,7 @@ public partial class PayrollCalculationService
             TaxableAllowances = buckets.Taxable + buckets.MealCash,
             ExemptAllowances = buckets.NonTaxable,
             Bonuses = profile.Bonuses,
+            Commission = profile.Commission,
             GrossPay = b.GrossPay,
             InsurableSalary = b.Insurance.SocialInsuranceBase,
             InsuranceEmployee = b.Insurance.EmployeeTotal,

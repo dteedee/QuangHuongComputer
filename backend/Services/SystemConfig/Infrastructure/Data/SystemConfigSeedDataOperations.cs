@@ -3,9 +3,9 @@ using SystemConfig.Domain;
 namespace SystemConfig.Infrastructure.Data;
 
 /// <summary>
-/// Dữ liệu seed cho các category vận hành: "Sales &amp; Tax", "Repair SLA".
+/// Dữ liệu seed cho các category vận hành: "Sales &amp; Tax", "Repair SLA", "HR &amp; Payroll".
 ///
-/// KHÔNG còn category "HR &amp; Payroll": D06 xoá 9 key lương/bảo hiểm tự nghĩ ra
+/// "HR &amp; Payroll" nay CHỈ chứa chính sách công ty (mặc định hoa hồng kỹ thuật) — D06 xoá 9 key lương/bảo hiểm tự nghĩ ra
 /// (BASE_SALARY, BONUS_RATE, HEALTH_INSURANCE_RATE, LUNCH_ALLOWANCE, OVERTIME_MULTIPLIER,
 /// PAID_LEAVE_DAYS, PROBATION_PERIOD_DAYS, SOCIAL_INSURANCE_RATE, WORKING_HOURS_PER_DAY) vì
 /// chúng là số mẫu, không phải tham số luật định 2026 — tham số thật do track HR/payroll của
@@ -41,6 +41,12 @@ public static class SystemConfigSeedDataOperations
             Entry("DIAGNOSIS_FEE", "50000", "Phí kiểm tra, báo giá (VNĐ)", "Repair SLA", now),
             Entry("WARRANTY_REPAIR_DAYS", "30", "Bảo hành sau sửa chữa (ngày)", "Repair SLA", now),
             Entry("SPARE_PARTS_MARKUP", "1.3", "Hệ số giá linh kiện thay thế (1.3x giá vốn)", "Repair SLA", now),
+
+            // ========== HR & Payroll — chính sách công ty (KHÔNG phải tham số luật) ==========
+            // Mặc định hoa hồng kỹ thuật khi nhân viên chưa có mức riêng (HR đặt mức riêng trong
+            // hồ sơ nhân viên, có lịch sử hiệu lực). Đọc bởi HR CommissionDefaults.
+            Entry("HR_COMMISSION_LABOR_PERCENT", "10", "Hoa hồng kỹ thuật mặc định: % trên tiền công + phí dịch vụ phiếu sửa (không tính linh kiện)", "HR & Payroll", now, ConfigValueType.Number),
+            Entry("HR_COMMISSION_FIXED_PER_JOB", "0", "Hoa hồng kỹ thuật mặc định: tiền cố định mỗi phiếu sửa đã thanh toán (VNĐ)", "HR & Payroll", now, ConfigValueType.Number),
         };
     }
 

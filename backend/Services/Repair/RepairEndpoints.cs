@@ -312,7 +312,7 @@ public static class RepairEndpoints
         // W2-13: cancelling releases every part still only reserved. A part on an
         // already-Completed work order was committed (real stock-out), not reserved,
         // so cancelling a Completed order never touches the ledger here.
-        adminGroup.MapPut("/work-orders/{id:guid}/cancel", async (Guid id, CancelWorkOrderDto dto, RepairDbContext db, IRepairStockService stock, ClaimsPrincipal user) =>
+        adminGroup.MapPut("/work-orders/{id:guid}/cancel", async (Guid id, CancelWorkOrderDto dto, RepairDbContext db, IRepairStockService stock, IPublishEndpoint bus, ClaimsPrincipal user) =>
         {
             var workOrder = await db.WorkOrders.Include(w => w.Parts).FirstOrDefaultAsync(w => w.Id == id);
             if (workOrder == null)
@@ -329,6 +329,10 @@ public static class RepairEndpoints
 
             workOrder.Cancel(dto.Reason);
             await db.SaveChangesAsync();
+
+            // Huỷ SAU khi đã thu tiền -> HR huỷ/thu hồi hoa hồng kỹ thuật của phiếu này.
+            if (workOrder.PaidAt.HasValue)
+                await bus.Publish(new RepairWorkOrderSettlementChangedEvent(workOrder.Id, DateTime.UtcNow));
 
             return Results.Ok(new { Message = "Work order cancelled", Status = workOrder.Status.ToString() });
         });

@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import {
     Users2, ShieldAlert, Calendar, Wallet,
     UserPlus, CheckCircle, Briefcase,
-    ClipboardCheck, Calculator, UserCog
+    ClipboardCheck, Calculator, UserCog, BadgePercent
 } from 'lucide-react';
 import { hrApi, payrollRunsApi } from '../../../api/hr';
 import { motion } from 'framer-motion';
@@ -87,12 +87,13 @@ export const HRPortal = () => {
             </div>
 
             {/* Quick Nav Cards */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4">
                 {[
                     { label: 'Chấm Công', desc: 'Check-in / check-out', to: '/backoffice/hr/attendance', icon: <Calendar size={24} />, color: 'text-green-600 bg-green-50' },
                     { label: 'Duyệt Phép', desc: 'Quản lý nghỉ phép', to: '/backoffice/hr/approvals', icon: <ClipboardCheck size={24} />, color: 'text-orange-600 bg-orange-50' },
                     { label: 'Tự Phục Vụ', desc: 'Hồ sơ & phiếu lương', to: '/backoffice/hr/self-service', icon: <UserCog size={24} />, color: 'text-blue-600 bg-blue-50' },
                     { label: 'Tham số lương/thuế/BH', desc: 'Mốc hiệu lực pháp luật', to: '/backoffice/hr/statutory-parameters', icon: <Calculator size={24} />, color: 'text-purple-600 bg-purple-50' },
+                    { label: 'Hoa hồng kỹ thuật', desc: 'Duyệt & trả qua lương', to: '/backoffice/hr/commissions', icon: <BadgePercent size={24} />, color: 'text-rose-600 bg-rose-50' },
                 ].map(card => (
                     <Link
                         key={card.to}

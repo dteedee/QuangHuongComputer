@@ -367,6 +367,165 @@ namespace HR.Infrastructure.Data.Migrations
                     b.ToTable("AttendanceRules", "hr");
                 });
 
+            modelBuilder.Entity("HR.Domain.CommissionEntry", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 0)
+                        .HasColumnType("numeric(18,0)");
+
+                    b.Property<DateTime?>("ApprovedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("ApprovedBy")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<decimal>("BaseAmount")
+                        .HasPrecision(18, 0)
+                        .HasColumnType("numeric(18,0)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("EarnedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<Guid>("EmployeeId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("FixedAmount")
+                        .HasPrecision(18, 0)
+                        .HasColumnType("numeric(18,0)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTime?>("PaidAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<Guid?>("PayrollId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Period")
+                        .IsRequired()
+                        .HasMaxLength(7)
+                        .HasColumnType("character varying(7)");
+
+                    b.Property<decimal>("RatePercent")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("numeric(5,2)");
+
+                    b.Property<string>("ReversalReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<DateTime?>("ReversedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<Guid>("SourceId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("SourceReference")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("SourceType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PayrollId")
+                        .HasDatabaseName("IX_CommissionEntries_PayrollId");
+
+                    b.HasIndex("EmployeeId", "Status")
+                        .HasDatabaseName("IX_CommissionEntries_Employee_Status");
+
+                    b.HasIndex("Period", "Status")
+                        .HasDatabaseName("IX_CommissionEntries_Period_Status");
+
+                    b.HasIndex("SourceType", "SourceId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_CommissionEntries_Source_Unique");
+
+                    b.ToTable("CommissionEntries", "hr", t =>
+                        {
+                            t.HasCheckConstraint("CK_CommissionEntries_AmountSign", "(\"SourceType\" = 'RepairWorkOrderClawback' AND \"Amount\" < 0) OR (\"SourceType\" <> 'RepairWorkOrderClawback' AND \"Amount\" > 0)");
+
+                            t.HasCheckConstraint("CK_CommissionEntries_Period", "\"Period\" ~ '^[0-9]{4}-(0[1-9]|1[0-2])$'");
+                        });
+                });
+
+            modelBuilder.Entity("HR.Domain.CommissionPolicy", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("text");
+
+                    b.Property<DateOnly>("EffectiveFrom")
+                        .HasColumnType("date");
+
+                    b.Property<Guid>("EmployeeId")
+                        .HasColumnType("uuid");
+
+                    b.Property<decimal>("FixedAmountPerJob")
+                        .HasPrecision(18, 0)
+                        .HasColumnType("numeric(18,0)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<decimal>("LaborPercent")
+                        .HasPrecision(5, 2)
+                        .HasColumnType("numeric(5,2)");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp without time zone");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmployeeId", "EffectiveFrom")
+                        .HasDatabaseName("IX_CommissionPolicies_Employee_EffectiveFrom");
+
+                    b.ToTable("CommissionPolicies", "hr", t =>
+                        {
+                            t.HasCheckConstraint("CK_CommissionPolicies_FixedAmount", "\"FixedAmountPerJob\" >= 0");
+
+                            t.HasCheckConstraint("CK_CommissionPolicies_LaborPercent", "\"LaborPercent\" >= 0 AND \"LaborPercent\" <= 100");
+                        });
+                });
+
             modelBuilder.Entity("HR.Domain.Dependent", b =>
                 {
                     b.Property<Guid>("Id")

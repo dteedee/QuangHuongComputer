@@ -34,9 +34,9 @@ generated inline in the `WorkOrder` constructor (`TKT-yyyyMMdd-XXXXXX`), not via
 | PUT | `/api/repair/admin/work-orders/{id}/assign` | `Permissions.Repair.AssignTechnician` | Re-assign allowed until `InProgress` (W0-11). |
 | PUT | `/api/repair/admin/work-orders/{id}/start` | `Permissions.Repair.UpdateStatus` | Assigned/Approved -> InProgress. |
 | PUT | `/api/repair/admin/work-orders/{id}/complete` | `Permissions.Repair.Complete` | **W2-13**: commits every reserved part via `IStockLedger.CommitAsync` (reason `RepairPart`) before flipping to `Completed`; publishes `RepairCompletedEvent`. |
-| PUT | `/api/repair/admin/work-orders/{id}/cancel` | `Permissions.Repair.UpdateStatus` | **W2-13**: releases every still-reserved part via `IStockLedger.ReleaseAsync`. No-op on the ledger if the order was already `Completed` (parts already committed). |
+| PUT | `/api/repair/admin/work-orders/{id}/cancel` | `Permissions.Repair.UpdateStatus` | **W2-13**: releases every still-reserved part via `IStockLedger.ReleaseAsync`. No-op on the ledger if the order was already `Completed` (parts already committed). If the order had been paid, it publishes `RepairWorkOrderSettlementChangedEvent`, and HR reverses or claws back the technician commission (`hr-commission.md`). |
 | PUT | `/api/repair/admin/work-orders/{id}/ready-for-pickup` | module permission | **W2-13 new.** `Completed` -> `ReadyForPickup`. |
-| PUT | `/api/repair/admin/work-orders/{id}/pay` | module permission | **W2-13 new.** Body `{paymentReference?}`. `ReadyForPickup` -> `Paid`. Records money changed hands; not a payment gateway integration. |
+| PUT | `/api/repair/admin/work-orders/{id}/pay` | module permission | **W2-13 new.** Body `{paymentReference?}`. `ReadyForPickup` -> `Paid`. Records money changed hands; not a payment gateway integration. Publishes `RepairWorkOrderSettlementChangedEvent`, and HR accrues the technician commission on `LaborCost + ServiceFee` (`hr-commission.md`). |
 | PUT | `/api/repair/admin/work-orders/{id}/handover` | module permission | **W2-13 new.** Body `{receivedByName}`. `Paid` -> `Delivered` (terminal), records receiver name + acting staff id + timestamp. |
 | GET | `/api/repair/admin/stats` | module permission | Unchanged. |
 

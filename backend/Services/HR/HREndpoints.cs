@@ -29,6 +29,10 @@ public static class HREndpoints
         app.MapPublicHolidayEndpoints();
         app.MapOvertimeScheduleEndpoints();
 
+        // Hoa hồng kỹ thuật: sổ hoa hồng, mức riêng theo nhân viên, "hoa hồng của tôi".
+        app.MapCommissionEndpoints();
+        app.MapCommissionPolicyEndpoints();
+
         var group = app.MapGroup("/api/hr").RequireModulePermissions(PermissionModules.HR);
 
         // ==================== PUBLIC RECRUITMENT ====================
