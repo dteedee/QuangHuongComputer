@@ -114,6 +114,7 @@ public sealed class PromotionSeoProvider : ISeoPageProvider
                     ("Trang chủ", (string?)"/"), ("Khuyến mãi", (string?)ListPath), (post.Title, (string?)null),
                 }),
             },
+            Body = ContentSeoBodyBuilder.Article(post.Title, post.Content, ("Khuyến mãi", ListPath)),
         };
     }
 

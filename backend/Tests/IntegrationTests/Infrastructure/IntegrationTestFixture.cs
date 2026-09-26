@@ -3,6 +3,7 @@ using ApiGateway.Startup;
 // lớp sinh ra là internal nên không dùng trực tiếp được).
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.AspNetCore.TestHost;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -104,6 +105,7 @@ public class IntegrationTestFixture : IAsyncLifetime
                 builder.UseEnvironment("Development");
                 builder.ConfigureAppConfiguration(cfg => cfg.AddInMemoryCollection(overrides));
                 builder.ConfigureLogging(logging => logging.SetMinimumLevel(LogLevel.Warning));
+                builder.ConfigureTestServices(ShellTemplateStub.Register);
             });
 
         // Ép host khởi động ngay tại đây (migration chạy trong lúc khởi động).

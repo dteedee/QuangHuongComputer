@@ -105,12 +105,14 @@ Test bắt buộc trước khi merge trang có reveal: chụp màn 1440×900 và
 Breakpoint mặc định Tailwind. Gutter `px-4` → `sm:px-5` → `lg:px-6`.
 Home `max-w-shell`, lưới gợi ý `grid-cols-2 md:grid-cols-3 lg:grid-cols-4` · Listing `lg:grid-cols-[264px_1fr]` · PDP `lg:grid-cols-[1fr_400px]`, khối giá sticky `top-24` · Cart/Checkout `lg:grid-cols-[1fr_380px]` · Account `lg:grid-cols-[240px_1fr]` · Admin shell `grid-template-columns:264px minmax(0,1fr)`, **cuộn nằm ở `<main id="scroll">` chứ không ở `body`**, topbar 56px · Admin dashboard `max-w-admin`, KPI `grid-cols-2 xl:grid-cols-4` · Admin form `xl:grid-cols-[1fr_380px]`. Chi tiết: design-direction §6.
 
+**Thanh điều hướng dưới (mobile, < lg)** — `components/layout/mobile-bottom-nav.tsx`, mount trong `RootLayout` (chỉ storefront): Trang chủ · Danh mục (mở `HeaderMobileMenu` có sẵn) · Khuyến mãi · Giỏ hàng (badge, chặn 99+) · Tài khoản. Cao 56px + `env(safe-area-inset-bottom)`. Ẩn ở `/thanh-toan`, `/checkout/*`, `/payment/*`, `/backoffice`. Mọi lớp nổi dưới đáy KHÔNG tự cộng số px cho nhau mà đọc biến ở `styles/base.css`: `--mobile-nav-offset` (cờ `data-mobile-nav` trên `<html>`), `--sticky-buy-offset` (cờ `data-sticky-buy`, thanh mua nhanh PDP), bật bằng `useRootFlag`. Lớp tiện ích: `.pb-mobile-nav` (khung trang), `.bottom-mobile-nav` (thanh dính đáy: mua nhanh, so sánh), `.bottom-floating` / `.bottom-floating-2` (nút chat, nút lên đầu trang).
+
 ## 7. SEO shell (D11) — `frontend/index.html`
 
 - `<!-- seo:head --> … <!-- /seo:head -->` bọc title/description/OG mặc định: ApiGateway thay cả khối này theo URL. Giữ nguyên marker, giữ default hợp lệ (edge rơi về file tĩnh khi shell chết).
-- `<!-- seo:body -->` nằm trong `#root`: nơi shell chèn snapshot semantic. React xoá `#root` ở lần render đầu nên không bao giờ thấy cả hai.
+- `<!-- seo:body --> … <!-- /seo:body -->` nằm trong `#root`: shell thay phần giữa bằng `<main class="seo-snapshot">` (H1, giá, link, thân bài đã lọc — docs/seo-shell.md "Body fragment"). `main.tsx` dùng `createRoot` (không hydrate) nên React thay hẳn khối này ở lần render đầu.
 - `.seo-shell-header` là placeholder cao **64px (mobile) / 108px (≥1024px)** = đúng chiều cao header thật (`h-16` / `h-9` + `h-[72px]`). **Đổi header ở wave 3 thì phải đổi 2 số này**, nếu không sẽ có CLS.
-- CSS inline cho snapshot phải ≤ 1KB (hiện 915 B) và phải nằm inline — nó vẽ trước khi stylesheet tải xong.
+- CSS inline cho snapshot phải ≤ 1KB (hiện ≈960 B, gồm `.seo-crumbs`/`.seo-pager`) và phải nằm inline — nó vẽ trước khi stylesheet tải xong.
 - Ảnh OG mặc định: `frontend/public/brand/og-default.png` 1200×630 (PNG/JPG; Meta không tài liệu hoá SVG). Không tham chiếu `og-default.svg` trong thẻ OG nữa.
 
 ## 8. Chống mẫu (điều đã làm UI cũ trông rẻ tiền)

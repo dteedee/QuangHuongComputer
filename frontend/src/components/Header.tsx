@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { getConfigValue } from '../api/systemConfig';
@@ -16,13 +16,21 @@ import { HeaderMobileSearchOverlay } from './header/header-mobile-search-overlay
 interface HeaderProps {
     onCartClick: () => void;
     onChatClick?: () => void;
+    /** Điều khiển menu danh mục mobile từ ngoài (thanh điều hướng dưới). Bỏ trống = Header tự giữ state. */
+    mobileMenuOpen?: boolean;
+    onMobileMenuOpenChange?: (open: boolean) => void;
 }
 
 const CATALOG_STALE_TIME_MS = 5 * 60 * 1000;
 
-export const Header = ({ onCartClick, onChatClick }: HeaderProps) => {
+export const Header = ({ onCartClick, onChatClick, mobileMenuOpen, onMobileMenuOpenChange }: HeaderProps) => {
     const [isScrolled, setIsScrolled] = useState(false);
-    const [showMobileMenu, setShowMobileMenu] = useState(false);
+    const [ownMobileMenu, setOwnMobileMenu] = useState(false);
+    const showMobileMenu = mobileMenuOpen ?? ownMobileMenu;
+    const setShowMobileMenu = useCallback(
+        (open: boolean) => (onMobileMenuOpenChange ? onMobileMenuOpenChange(open) : setOwnMobileMenu(open)),
+        [onMobileMenuOpenChange],
+    );
     const [showMobileSearch, setShowMobileSearch] = useState(false);
     const location = useLocation();
 
@@ -92,7 +100,7 @@ export const Header = ({ onCartClick, onChatClick }: HeaderProps) => {
     useEffect(() => {
         setShowMobileMenu(false);
         setShowMobileSearch(false);
-    }, [location.pathname, location.search]);
+    }, [location.pathname, location.search, setShowMobileMenu]);
 
     // Prevent body scroll when mobile menu is open
     useEffect(() => {

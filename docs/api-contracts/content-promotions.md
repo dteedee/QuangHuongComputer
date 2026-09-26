@@ -79,7 +79,11 @@ Storefront flash-sale feed. Returns only `Type=FlashSale`, `Status=Active`, with
 
 ### Public `GET /api/promotions/available` / `GET /api/promotions/{id}`
 
-Unchanged - code-lookup suggestion feed + single-promotion read, both pre-existing.
+Code-lookup suggestion feed + single-promotion read. **Since W2 (2026-09-26)** the anonymous
+`GET /api/promotions/{id}` returns a promotion ONLY while it is running (`Promotion.RunningPredicate`):
+draft / paused / not-yet-started / expired -> `404` (same body as a missing id, so unpublished
+campaigns are not enumerable). Staff read any status via `GET /api/promotions/admin/{id}`
+(`Content.ManageCoupons`); the admin FE client (`promotionsApi.get`) calls that one.
 `/available` is also the source of the coupon cards on `/khuyen-mai` (called anonymously, no
 `customerId`). Real row shape (note: no `startAt`):
 

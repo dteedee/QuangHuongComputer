@@ -53,6 +53,9 @@ export const ROUTES = {
   REGISTER: '/register',
   FORGOT_PASSWORD: '/forgot-password',
   RESET_PASSWORD: '/reset-password',
+  // Catch-all cho trang CMS đã xuất bản (`storefront-cms.routes.ts`) — React Router xếp mọi
+  // đoạn tĩnh ở trên trước nó, nên nó chỉ bắt slug không route nào khác nhận.
+  CMS_PAGE: '/:slug',
 } as const;
 
 /** Replaces `:param` tokens in a route template with positional values, in the order they appear. */

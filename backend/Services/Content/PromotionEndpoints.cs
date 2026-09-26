@@ -90,18 +90,14 @@ public static class PromotionEndpoints
             return Results.Ok(items);
         });
 
-        group.MapGet("/{id:guid}", async (Guid id, ContentDbContext db) =>
-        {
-            var p = await db.Promotions
-                .Include(x => x.Conditions)
-                .Include(x => x.Rewards)
-                .FirstOrDefaultAsync(x => x.Id == id);
-            return p is null
-                ? Results.NotFound(new { message = "Promotion không tồn tại" })
-                : Results.Ok(ToDto(p));
-        });
+        // Khách vãng lai chỉ thấy khuyến mãi ĐANG CHẠY (cùng vị từ với /available, /api/content/
+        // promotions/active và SEO shell). Nháp / tạm dừng / chưa tới giờ / hết hạn -> 404 như không
+        // tồn tại, để không lộ chương trình chưa công bố. Nhân viên xem mọi trạng thái qua /admin/{id}.
+        group.MapGet("/{id:guid}", (Guid id, ContentDbContext db) => GetByIdAsync(db, id, runningOnly: true));
 
         // ---------- Admin ----------
+
+        adminGroup.MapGet("/{id:guid}", (Guid id, ContentDbContext db) => GetByIdAsync(db, id, runningOnly: false));
 
         adminGroup.MapGet("/", async (
             ContentDbContext db,
@@ -264,6 +260,17 @@ public static class PromotionEndpoints
             // oracle dò mã. Không thể bỏ phân biệt (giỏ hàng cần biết vì sao mã không áp được),
             // nên chặn bằng rate limit "lookup" (30 lần/phút/IP) — giống mọi tra cứu công khai khác.
         }).AllowAnonymous().RequireRateLimiting("lookup");
+    }
+
+    /// <summary>Đọc một khuyến mãi kèm điều kiện/phần thưởng; <paramref name="runningOnly"/> = bộ lọc cho khách.</summary>
+    public static async Task<IResult> GetByIdAsync(ContentDbContext db, Guid id, bool runningOnly)
+    {
+        var query = db.Promotions.AsNoTracking().Include(x => x.Conditions).Include(x => x.Rewards).Where(x => x.Id == id);
+        if (runningOnly) query = query.Where(Promotion.RunningPredicate(DateTime.UtcNow));
+        var p = await query.FirstOrDefaultAsync();
+        return p is null
+            ? Results.NotFound(new { message = "Promotion không tồn tại" })
+            : Results.Ok(ToDto(p));
     }
 
     private static object ToDto(Promotion p) => new
