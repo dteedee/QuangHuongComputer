@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Generates DB/Redis/RabbitMQ passwords + a JWT signing key with `openssl rand`, and writes them
+# Generates DB/Redis/RabbitMQ passwords + a JWT signing key + the attendance TOTP secret with `openssl rand`, and writes them
 # into a target .env file — copying it from an example first if it does not exist yet.
 # D05 §10/§15, phase-64 step 5.
 #
@@ -59,6 +59,8 @@ fill POSTGRES_PASSWORD 32
 fill REDIS_PASSWORD 32
 fill RABBITMQ_PASSWORD 32
 fill JWT_KEY 64
+# Secret TOTP chấm công QR (Hr:AttendanceTotpSecret) — không có fallback trong code.
+fill ATTENDANCE_TOTP_SECRET 48
 # Nếu thiếu dòng này, ADMIN_INITIAL_PASSWORD giữ nguyên giá trị mẫu CÔNG KHAI trong
 # .env.prod.example — tức tài khoản quản trị của một server mở ra Internet dùng mật khẩu
 # ai đọc repo cũng biết. Sinh ngẫu nhiên như mọi bí mật khác; lần đăng nhập đầu vẫn buộc đổi.

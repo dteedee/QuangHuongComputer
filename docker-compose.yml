@@ -30,6 +30,9 @@ x-api-image: &api-image
     Redis__InstanceName: "quanghc:"
     Jwt__Key: ${JWT_KEY:?JWT_KEY is required}
     Jwt__ExpireMinutes: ${JWT_EXPIRE_MINUTES:-60}
+    # Secret TOTP chấm công QR — không có giá trị mặc định trong code; rỗng ⇒ chấm công QR bị từ chối
+    # (fail-closed, log lỗi lúc boot). scripts/gen-secrets.sh sinh sẵn.
+    Hr__AttendanceTotpSecret: ${ATTENDANCE_TOTP_SECRET:-}
     # D05 §3: ONE variable drives the site address, the SPA's API base, media/CORS/return URLs.
     # BaseUrl feeds PaymentUrlBuilder's VNPay/MoMo return+notify fallbacks (same-origin design —
     # PaymentUrlBuilder.cs already derives correct URLs from BaseUrl/Frontend:Url when the

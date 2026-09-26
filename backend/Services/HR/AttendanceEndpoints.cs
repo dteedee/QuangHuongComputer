@@ -72,6 +72,9 @@ public static class AttendanceEndpoints
         group.MapGet("/qr-code", (Guid storeId, AttendanceValidator validator) =>
         {
             var code = validator.GenerateCode(storeId);
+            if (code is null)
+                return Results.Json(new { error = AttendanceValidator.QrNotConfiguredReason },
+                    statusCode: StatusCodes.Status503ServiceUnavailable);
             var expiresIn = 30 - (int)(DateTimeOffset.UtcNow.ToUnixTimeSeconds() % 30);
             return Results.Ok(new { storeId, code, expiresInSeconds = expiresIn });
         }).RequireAuthorization(Permissions.HR.ViewAttendance);

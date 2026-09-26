@@ -46,6 +46,8 @@ public static class DependencyInjection
         // Phase 06 — Application services
         services.AddSingleton<IStoreLocationProvider, InMemoryStoreLocationProvider>();
         services.AddScoped<AttendanceValidator>();
+        // Thiếu Hr:AttendanceTotpSecret ⇒ log lỗi lúc boot (QR bị từ chối, không có secret mặc định).
+        services.AddHostedService<AttendanceTotpStartupCheck>();
         services.AddScoped<AttendanceCheckInService>();
         services.AddScoped<AttendanceAggregationService>();
         services.AddScoped<PayrollCalculationService>();
